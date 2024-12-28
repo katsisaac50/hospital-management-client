@@ -1,12 +1,38 @@
 import axios from 'axios';
 import { useState } from 'react';
 
-export async function getServerSideProps() {
+export async function getServerSideProps(context) {
+  const token = localStorage.getItem('token');
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      },
+    };
+  }
+
   try {
-    const response = await axios.get('http://localhost:5000/api/patients');
+    const response = await axios.get('http://localhost:5000/api/patients', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
     return { props: { patients: response.data } };
   } catch (error) {
     console.error('Error fetching patients:', error);
+
+    if (error.response?.status === 401) {
+      return {
+        redirect: {
+          destination: '/login',
+          permanent: false,
+        },
+      };
+    }
+
     return { props: { patients: [] } }; // Return empty list on error
   }
 }
@@ -24,12 +50,28 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
   const handlePatientClick = async (patientId: string) => {
+    const token = localStorage.getItem('authToken'); // Get token from localStorage
+  
+    if (!token) {
+      alert('You need to be logged in to view this patient.');
+      window.location.href = '/login';
+      return;
+    }
+  
     try {
-        // Fetch patient details using patientId
-      const response = await axios.get(`http://localhost:5000/api/patients/${patientId}`);
-      setSelectedPatient(response.data); // Set selected patient data
+      const response = await axios.get(`http://localhost:5000/api/patients/${patientId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setSelectedPatient(response.data);
     } catch (error) {
       console.error('Error fetching patient details:', error);
+  
+      if (error.response?.status === 401) {
+        alert('Session expired. Please log in again.');
+        window.location.href = '/login';
+      }
     }
   };
 
