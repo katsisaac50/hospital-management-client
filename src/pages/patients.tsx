@@ -36,7 +36,7 @@ export async function getServerSideProps(context) {
       };
     }
 
-    return { props: { patients: [] } }; // Return empty list on error
+    return { props: { patients: [] } };
   }
 }
 
@@ -46,40 +46,45 @@ interface Patient {
   age: number;
   gender: string;
   contact: string;
-  // Add any other properties you want to display for the patient
 }
 
 const Patients = ({ patients }: { patients: Patient[] }) => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
-  // Helper to retrieve token from cookies
-const getAuthTokenFromCookies = () => {
-  const cookies = document.cookie.split('; ').reduce((acc, cookieStr) => {
-    const [key, value] = cookieStr.split('=');
-    acc[key] = value;
-    return acc;
-  }, {});
-  return cookies.authToken || '';
-};
+  const getAuthTokenFromCookies = () => {
+    const cookies = document.cookie.split('; ').reduce((acc, cookieStr) => {
+      const [key, value] = cookieStr.split('=');
+      acc[key] = value;
+      return acc;
+    }, {});
+    return cookies.authToken || '';
+  };
+
   const handlePatientClick = async (patientId: string) => {
+    const token = getAuthTokenFromCookies();
+
+    if (!token) {
+      alert('Session expired or you are not logged in. Redirecting to login...');
+      window.location.href = '/login';
+      return;
+    }
+
     try {
       const response = await axios.get(`http://localhost:5000/api/patients/${patientId}`, {
         headers: {
-          Authorization: `Bearer ${getAuthTokenFromCookies()}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       setSelectedPatient(response.data);
     } catch (error) {
       console.error('Error fetching patient details:', error);
-  
+
       if (error.response?.status === 401) {
         alert('Session expired. Please log in again.');
         window.location.href = '/login';
       }
     }
   };
-
-  document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
@@ -93,9 +98,8 @@ const getAuthTokenFromCookies = () => {
               <li
                 key={patient._id}
                 className="p-4 bg-blue-50 border border-blue-200 rounded-md flex justify-between items-center cursor-pointer"
-                onClick={() => handlePatientClick(patient._id)} // Handle click
+                onClick={() => handlePatientClick(patient._id)}
               >
-                
                 <span className="text-lg font-semibold text-gray-700">
                   {patient.name}
                 </span>
@@ -122,7 +126,6 @@ const getAuthTokenFromCookies = () => {
             <p><strong>Age:</strong> {selectedPatient.age} {selectedPatient.age > 1 ? 'years' : 'year'} old</p>
             <p><strong>Gender:</strong> {selectedPatient.gender}</p>
             <p><strong>Phone Number:</strong> {selectedPatient.contact}</p>
-            {/* Add other patient details here */}
           </div>
         </div>
       )}
