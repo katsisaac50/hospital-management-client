@@ -51,7 +51,9 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
                 <span className="text-lg font-semibold text-gray-700">
                   {patient.name}
                 </span>
-                <span className="text-gray-600">{patient.age} years old</span>
+                <span className="text-gray-600">
+                  {patient.age} {patient.age > 1 ? 'years' : 'year'} old
+                </span>
               </li>
             ))}
           </ul>
@@ -69,7 +71,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
           </h4>
           <div>
             <p><strong>Name:</strong> {selectedPatient.name}</p>
-            <p><strong>Age:</strong> {selectedPatient.age}</p>
+            <p><strong>Age:</strong> {selectedPatient.age} {selectedPatient.age > 1 ? 'years' : 'year'} old</p>
             <p><strong>Gender:</strong> {selectedPatient.gender}</p>
             <p><strong>Phone Number:</strong> {selectedPatient.contact}</p>
             {/* Add other patient details here */}
