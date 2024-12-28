@@ -1,8 +1,11 @@
 import axios from 'axios';
 import { useState } from 'react';
+import cookie from 'cookie';
 
 export async function getServerSideProps(context) {
-  const token = localStorage.getItem('token');
+  const { req } = context;
+  const cookies = cookie.parse(req.headers.cookie || '');
+  const token = cookies.authToken;
 
   if (!token) {
     return {
