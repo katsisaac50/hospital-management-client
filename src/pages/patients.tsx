@@ -52,19 +52,20 @@ interface Patient {
 const Patients = ({ patients }: { patients: Patient[] }) => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
+  // Helper to retrieve token from cookies
+const getAuthTokenFromCookies = () => {
+  const cookies = document.cookie.split('; ').reduce((acc, cookieStr) => {
+    const [key, value] = cookieStr.split('=');
+    acc[key] = value;
+    return acc;
+  }, {});
+  return cookies.authToken || '';
+};
   const handlePatientClick = async (patientId: string) => {
-    const token = localStorage.getItem('authToken'); // Get token from localStorage
-  
-    if (!token) {
-      alert('You need to be logged in to view this patient.');
-      window.location.href = '/login';
-      return;
-    }
-  
     try {
       const response = await axios.get(`http://localhost:5000/api/patients/${patientId}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${getAuthTokenFromCookies()}`,
         },
       });
       setSelectedPatient(response.data);
@@ -77,6 +78,8 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
       }
     }
   };
+
+  document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
