@@ -1,55 +1,56 @@
 import Link from 'next/link';
+import { FaUser, FaStethoscope, FaCalendarAlt, FaFileAlt, FaHeart, FaChartPie, FaMoneyBillWave } from 'react-icons/fa';
 
 const Dashboard = () => {
   return (
-    <div className="min-h-screen flex bg-gray-100">
+    <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-blue-700 text-white">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4">Hospital Dashboard</h2>
-        </div>
+      <aside className="w-16 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 shadow-xl flex flex-col justify-between items-center">
+        <h2 className="text-3xl font-extrabold text-white mb-8 flex items-center justify-center">
+          <span className="material-icons-outlined text-3xl">local_hospital</span>
+        </h2>
         <nav>
-          <ul className="space-y-2">
+          <ul className="flex flex-col space-y-6 items-center">
             <li>
               <Link
                 href="/patients"
-                className="block px-6 py-3 hover:bg-blue-600 transition-colors rounded-l-md"
+                className="flex items-center justify-center w-12 h-12 rounded-lg hover:bg-blue-800 transition-all duration-300"
               >
-                🏥 View Patients
+                <span className="material-icons-outlined text-xl">people</span>
               </Link>
             </li>
             <li>
               <Link
                 href="/doctors"
-                className="block px-6 py-3 hover:bg-blue-600 transition-colors rounded-l-md"
+                className="flex items-center justify-center w-12 h-12 rounded-lg hover:bg-blue-800 transition-all duration-300"
               >
-                👩‍⚕️ View Doctors
+                <span className="material-icons-outlined text-xl">person</span>
               </Link>
             </li>
             <li>
               <Link
                 href="/appointments"
-                className="block px-6 py-3 hover:bg-blue-600 transition-colors rounded-l-md"
+                className="flex items-center justify-center w-12 h-12 rounded-lg hover:bg-blue-800 transition-all duration-300"
               >
-                📅 Appointments
+                <span className="material-icons-outlined text-xl">event</span>
               </Link>
             </li>
             <li>
               <Link
                 href="/reports"
-                className="block px-6 py-3 hover:bg-blue-600 transition-colors rounded-l-md"
+                className="flex items-center justify-center w-12 h-12 rounded-lg hover:bg-blue-800 transition-all duration-300"
               >
-                📊 Reports
+                <span className="material-icons-outlined text-xl">description</span>
               </Link>
             </li>
           </ul>
         </nav>
-        <div className="mt-auto p-6">
+        <div className="mt-auto">
           <Link
             href="/logout"
-            className="block text-center bg-red-600 hover:bg-red-500 transition-colors py-2 px-4 rounded-md"
+            className="flex items-center justify-center w-12 h-12 rounded-lg hover:bg-red-500 transition-all duration-300"
           >
-            🚪 Logout
+            <span className="material-icons-outlined text-xl">logout</span>
           </Link>
         </div>
       </aside>
@@ -57,41 +58,85 @@ const Dashboard = () => {
       {/* Main Content */}
       <main className="flex-1 p-8">
         {/* Welcome Header */}
-        <header className="bg-white shadow p-6 rounded-md mb-6">
-          <h1 className="text-3xl font-bold text-blue-700">
-            Welcome Back, Dr. John Doe!
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Keep track of your patients and appointments today.
-          </p>
-        </header>
+        <header className="bg-white shadow-lg rounded-lg p-8 mb-6 flex items-center space-x-6">
+  <img
+    src="/profile-picture.jpg" // Replace with actual image URL
+    alt="User Profile"
+    className="w-16 h-16 rounded-full shadow-md"
+  />
+  <div>
+    <h1 className="text-4xl font-extrabold text-blue-600">
+      Welcome Back, Dr. Mera Malaika!
+    </h1>
+    <p className="text-gray-600 mt-2 text-lg">
+      Have you had a routine health check this month?
+    </p>
+    <div className="mt-4 flex space-x-4">
+      <button className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600">
+        Check Now
+      </button>
+      <button className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg shadow hover:bg-gray-300">
+        View Report
+      </button>
+    </div>
+  </div>
+</header>
 
-        {/* Quick Actions */}
-        <section className="grid grid-cols-2 gap-6">
-          <Link
-            href="/patients"
-            className="bg-green-500 text-white p-6 rounded-md shadow hover:bg-green-600 transition"
-          >
-            🏥 View Patients
-          </Link>
-          <Link
-            href="/doctors"
-            className="bg-blue-500 text-white p-6 rounded-md shadow hover:bg-blue-600 transition"
-          >
-            👩‍⚕️ View Doctors
-          </Link>
-          <Link
-            href="/appointments"
-            className="bg-purple-500 text-white p-6 rounded-md shadow hover:bg-purple-600 transition"
-          >
-            📅 Manage Appointments
-          </Link>
-          <Link
-            href="/reports"
-            className="bg-orange-500 text-white p-6 rounded-md shadow hover:bg-orange-600 transition"
-          >
-            📊 View Reports
-          </Link>
+
+        {/* Quick Stats */}
+        <section className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+          <div className="bg-gradient-to-r from-green-400 to-green-600 text-white p-6 rounded-xl shadow-md flex items-center">
+            <FaHeart className="text-4xl mr-4" />
+            <div>
+              <h3 className="text-2xl font-bold">80 bpm</h3>
+              <p className="text-sm">Heart Rate</p>
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-blue-400 to-blue-600 text-white p-6 rounded-xl shadow-md flex items-center">
+            <FaStethoscope className="text-4xl mr-4" />
+            <div>
+              <h3 className="text-2xl font-bold">4.75 liters</h3>
+              <p className="text-sm">Lung Capacity</p>
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-purple-400 to-purple-600 text-white p-6 rounded-xl shadow-md flex items-center">
+            <FaChartPie className="text-4xl mr-4" />
+            <div>
+              <h3 className="text-2xl font-bold">5 million/ml</h3>
+              <p className="text-sm">Blood Cells</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Charts Section */}
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <h3 className="text-xl font-bold mb-4">Body Fluid Composition</h3>
+            <div className="h-40 bg-gray-100 rounded">[Bar Chart Placeholder]</div>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <h3 className="text-xl font-bold mb-4">Composition of Solids</h3>
+            <div className="h-40 bg-gray-100 rounded">[Pie Chart Placeholder]</div>
+          </div>
+        </section>
+
+        {/* Upcoming Events */}
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <h3 className="text-xl font-bold mb-4">Upcoming Checkups</h3>
+            <ul className="text-gray-600">
+              <li className="mb-2">🦷 Dental Health - Jan 5, 2024</li>
+              <li className="mb-2">🧠 BrainIQ Test - Jan 15, 2024</li>
+              <li>🩺 General Checkup - Feb 1, 2024</li>
+            </ul>
+          </div>
+          <div className="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-6 rounded-xl shadow-md flex items-center justify-between">
+            <FaMoneyBillWave className="text-4xl" />
+            <div>
+              <h3 className="text-2xl font-bold">$24,000</h3>
+              <p className="text-sm">Insurance Balance</p>
+            </div>
+          </div>
         </section>
       </main>
     </div>
