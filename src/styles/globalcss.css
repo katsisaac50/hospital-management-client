@@ -1,6 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* Specifically override the layout for the Login page */
+body.login-page {
+  display: block; /* Prevent flexbox layout from affecting the login page */
+}
 
 body {
   font-family: Arial, sans-serif;
