@@ -46,6 +46,10 @@ interface Patient {
   age: number;
   gender: string;
   contact: string;
+  address: string;
+  medicalHistory: string[];
+  currentDiagnosis: string;
+  treatment: string;
 }
 
 const Patients = ({ patients }: { patients: Patient[] }) => {
@@ -106,6 +110,11 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
                 <span className="text-gray-600">
                   {patient.age} {patient.age > 1 ? 'years' : 'year'} old
                 </span>
+                <div className="flex space-x-2">
+                  <button className="text-blue-500">View Profile</button>
+                  <button className="text-yellow-500">Edit</button>
+                  <button className="text-red-500">Delete</button>
+                </div>
               </li>
             ))}
           </ul>
@@ -126,6 +135,20 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
             <p><strong>Age:</strong> {selectedPatient.age} {selectedPatient.age > 1 ? 'years' : 'year'} old</p>
             <p><strong>Gender:</strong> {selectedPatient.gender}</p>
             <p><strong>Phone Number:</strong> {selectedPatient.contact}</p>
+            <p><strong>Address:</strong> {selectedPatient.address}</p>
+            <p><strong>Medical History:</strong></p>
+            <ul>
+              {selectedPatient.medicalHistory.map((history, index) => (
+                <li key={index} className="ml-4">- {history}</li>
+              ))}
+            </ul>
+            <p><strong>Current Diagnosis:</strong> {selectedPatient.currentDiagnosis}</p>
+            <p><strong>Treatment:</strong> {selectedPatient.treatment}</p>
+          </div>
+          <div className="mt-4 flex space-x-4 justify-center">
+            <button className="bg-blue-500 text-white px-4 py-2 rounded-md">Edit Info</button>
+            <button className="bg-green-500 text-white px-4 py-2 rounded-md">Add Notes</button>
+            <button className="bg-red-500 text-white px-4 py-2 rounded-md">Remove Patient</button>
           </div>
         </div>
       )}
