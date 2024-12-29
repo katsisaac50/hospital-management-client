@@ -5,55 +5,73 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <aside className="w-16 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 shadow-xl flex flex-col justify-between items-center">
-        <h2 className="text-3xl font-extrabold text-white mb-8 flex items-center justify-center">
-          <span className="material-icons-outlined text-3xl">local_hospital</span>
-        </h2>
-        <nav>
-          <ul className="flex flex-col space-y-6 items-center">
-            <li>
-              <Link
-                href="/patients"
-                className="flex items-center justify-center w-12 h-12 rounded-lg hover:bg-blue-800 transition-all duration-300"
-              >
-                <span className="material-icons-outlined text-xl">people</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/doctors"
-                className="flex items-center justify-center w-12 h-12 rounded-lg hover:bg-blue-800 transition-all duration-300"
-              >
-                <span className="material-icons-outlined text-xl">person</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/appointments"
-                className="flex items-center justify-center w-12 h-12 rounded-lg hover:bg-blue-800 transition-all duration-300"
-              >
-                <span className="material-icons-outlined text-xl">event</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/reports"
-                className="flex items-center justify-center w-12 h-12 rounded-lg hover:bg-blue-800 transition-all duration-300"
-              >
-                <span className="material-icons-outlined text-xl">description</span>
-              </Link>
-            </li>
-          </ul>
-        </nav>
-        <div className="mt-auto">
-          <Link
-            href="/logout"
-            className="flex items-center justify-center w-12 h-12 rounded-lg hover:bg-red-500 transition-all duration-300"
-          >
-            <span className="material-icons-outlined text-xl">logout</span>
-          </Link>
-        </div>
-      </aside>
+      <aside className="w-20 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 shadow-xl flex flex-col justify-between items-center">
+  {/* Profile Icon */}
+  <div className="mb-8">
+    <img
+      src="/hospital-logo.jpg" // Replace with actual logo URL
+      alt="Hospital Logo"
+      className="w-12 h-12 rounded-full shadow-md"
+    />
+  </div>
+
+  {/* Navigation Links */}
+  <nav>
+    <ul className="flex flex-col space-y-6 items-center">
+      <li title="View Patients">
+        <Link
+          href="/patients"
+          className="flex items-center justify-center w-14 h-14 rounded-lg hover:bg-blue-800 transition-all duration-300"
+        >
+          <span className="material-icons-outlined text-2xl">people</span>
+        </Link>
+      </li>
+      <li title="View Doctors">
+        <Link
+          href="/doctors"
+          className="flex items-center justify-center w-14 h-14 rounded-lg hover:bg-blue-800 transition-all duration-300"
+        >
+          <span className="material-icons-outlined text-2xl">person</span>
+        </Link>
+      </li>
+      <li title="Appointments">
+        <Link
+          href="/appointments"
+          className="flex items-center justify-center w-14 h-14 rounded-lg hover:bg-blue-800 transition-all duration-300"
+        >
+          <span className="material-icons-outlined text-2xl">event</span>
+        </Link>
+      </li>
+      <li title="Reports">
+        <Link
+          href="/reports"
+          className="flex items-center justify-center w-14 h-14 rounded-lg hover:bg-blue-800 transition-all duration-300"
+        >
+          <span className="material-icons-outlined text-2xl">description</span>
+        </Link>
+      </li>
+      <li title="Settings">
+        <Link
+          href="/settings"
+          className="flex items-center justify-center w-14 h-14 rounded-lg hover:bg-blue-800 transition-all duration-300"
+        >
+          <span className="material-icons-outlined text-2xl">settings</span>
+        </Link>
+      </li>
+    </ul>
+  </nav>
+
+  {/* Logout */}
+  <div>
+    <Link
+      href="/logout"
+      className="flex items-center justify-center w-14 h-14 rounded-lg hover:bg-blue-800 transition-all duration-300"
+    >
+      <span className="material-icons-outlined text-2xl">logout</span>
+    </Link>
+  </div>
+</aside>
+
 
       {/* Main Content */}
       <main className="flex-1 p-8">
