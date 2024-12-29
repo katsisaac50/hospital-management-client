@@ -174,18 +174,16 @@ const Dashboard = () => {
   {/* Upcoming Check-Up */}
   {/* Interactive Upcoming Check-Up Calendar */}
   <div className="bg-white p-6 rounded-lg shadow-lg">
-        <h3 className="text-lg font-semibold text-gray-700 mb-4">
-          Upcoming Check-Up
-        </h3>
-        <Calendar
-          onChange={setSelectedDate}
-          value={selectedDate}
-          className="react-calendar"
-        />
-        <p className="text-sm text-gray-600 mt-4">
-          Selected Date: <span className="font-medium">{selectedDate.toDateString()}</span>
-        </p>
-      </div>
+      <h3 className="text-lg font-semibold text-gray-700 mb-4">Upcoming Check-Up</h3>
+      <Calendar
+        onChange={setSelectedDate}
+        value={selectedDate}
+        className="react-calendar"
+      />
+      <p className="text-sm text-gray-600 mt-4">
+        Selected Date: <span className="font-medium">{selectedDate.toDateString()}</span>
+      </p>
+    </div>
 
   {/* Last Health Check */}
   <div className="bg-white p-6 rounded-lg shadow-lg col-span-2">
