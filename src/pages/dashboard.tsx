@@ -1,10 +1,18 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { useState } from 'react';
 import Image from 'next/image';
 
-const StatCard = ({ title, value, icon, color }) => (
+interface StatCardProps {
+  title: string;
+  value: string;
+  icon: string;
+  color: string;
+}
+
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => (
   <div className="bg-white p-6 rounded-lg shadow-lg flex justify-between items-center">
     <div>
       <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
@@ -14,7 +22,13 @@ const StatCard = ({ title, value, icon, color }) => (
   </div>
 );
 
-const NavigationLink = ({ href, icon, title }) => (
+interface NavigationLinkProps {
+  href: string;
+  icon: string;
+  title: string;
+}
+
+const NavigationLink: React.FC<NavigationLinkProps> = ({ href, icon, title }) => (
   <li title={title}>
     <Link
       href={href}
@@ -25,8 +39,19 @@ const NavigationLink = ({ href, icon, title }) => (
   </li>
 );
 
-const Dashboard = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+const Dashboard: React.FC = () => {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const router = useRouter();
+
+  // Handle logout functionality
+  const handleLogout = () => {
+    // Clear session storage or cookies (depending on your authentication mechanism)
+    localStorage.removeItem('authToken'); // Example: clearing localStorage
+    sessionStorage.removeItem('authToken'); // Example: clearing sessionStorage
+
+    // Redirect to the login page
+    router.push('/login');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -54,13 +79,13 @@ const Dashboard = () => {
           </ul>
         </nav>
 
-        {/* Logout */}
-        <Link
-          href="/logout"
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout} // Call the logout function on click
           className="flex items-center justify-center w-14 h-14 rounded-lg hover:bg-blue-800 transition-all duration-300"
         >
           <span className="material-icons-outlined text-2xl">logout</span>
-        </Link>
+        </button>
       </aside>
 
       {/* Main Content */}
@@ -95,27 +120,7 @@ const Dashboard = () => {
           <StatCard title="Blood Cells" value="5 million/ml" icon="bloodtype" color="text-red-600" />
         </section>
 
-        {/* Charts Section */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Body Fluid Composition</h3>
-            <img
-              src="/body-fluid-chart.jpg"
-              alt="Body Fluid Composition Chart"
-              className="w-full"
-            />
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Composition of Solids</h3>
-            <img
-              src="/solid-composition-chart.jpg"
-              alt="Solid Composition Chart"
-              className="w-full"
-            />
-          </div>
-        </section>
-
-        {/* Upcoming Events */}
+        {/* Calendar and Health Data */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
           {/* Calendar */}
           <div className="bg-white p-6 rounded-lg shadow-lg">

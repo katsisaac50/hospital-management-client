@@ -2,11 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-
 body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
+  min-height: 100vh; /* Ensures the body fills the screen */
+  display: flex;
+  flex-direction: row;
+}
+
+html, body {
+  height: 100%;
+}
+
+main {
+  flex-grow: 1;
+  padding: 2rem; /* Reduced padding for better spacing */
+  overflow-y: auto; /* Allows scrolling if content overflows */
+  max-height: 100vh; /* Ensures the main content doesn't overflow the viewport */
 }
 
 nav ul {
@@ -26,7 +39,8 @@ nav ul li {
   padding: 1rem;
   font-family: 'Inter', sans-serif;
   width: 100%;
-  aspect-ratio: 1; /* Ensures a perfect square */
+  max-width: 400px; /* Prevent calendar from being too wide */
+  aspect-ratio: 1; /* Keeps it square */
 }
 
 .react-calendar__tile {
@@ -71,6 +85,9 @@ nav ul li {
 .react-calendar__navigation button:hover {
   color: #0369a1;
 }
+.react-calendar_navigation button:focus {
+  outline: 2px solid #0284c7;
+}
 
 .react-calendar__month-view__weekdays {
   display: grid;
@@ -90,4 +107,34 @@ nav ul li {
   background: #e0f2fe;
   color: #0284c7;
   border-radius: 0.5rem;
+}
+
+@media screen and (max-width: 1024px) {
+  .react-calendar {
+    width: 100%; /* Ensure calendar takes up the full available width */
+    max-width: 300px; /* Limit the maximum width of the calendar */
+  }
+
+  main {
+    padding: 1rem; /* Smaller padding on smaller screens */
+  }
+  nav ul {
+    flex-direction: column;
+  }
+
+  .grid-cols-1, .grid-cols-2, .grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .react-calendar {
+    font-size: 0.9rem; /* Smaller font size for calendar on smaller screens */
+  }
+  main {
+    padding: 1rem; /* Adjust padding for smaller screens */
+  }
+  header {
+    flex-direction: column;
+  }
 }
