@@ -194,17 +194,20 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
           </div>
 
           {/* History and Actions */}
-          <div className="mt-8">
-            <h5 className="text-xl font-medium">Medical History</h5>
-            <ul className="list-disc pl-6 mb-6">
-              {selectedPatient.medicalHistory.map((item, idx) => (
-                <li key={idx}>{item}</li>
-              ))}
-            </ul>
-            <button className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-300">
-              Add New Record
-            </button>
-          </div>
+          <div>
+  <h5 className="text-xl font-medium">Medical History</h5>
+  {/* Safeguard to ensure `selectedPatient` and `medicalHistory` are valid */}
+  {selectedPatient?.medicalHistory?.length > 0 ? (
+    <ul className="list-disc pl-6 mb-6">
+      {selectedPatient.medicalHistory.map((item, idx) => (
+        <li key={idx}>{item}</li>
+      ))}
+    </ul>
+  ) : (
+    <p className="text-gray-500">No medical history available.</p>
+  )}
+</div>
+
         </div>
       )}
     </div>
