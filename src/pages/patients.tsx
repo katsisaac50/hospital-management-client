@@ -1,6 +1,8 @@
 import axios from 'axios';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import cookie from 'cookie';
+import { Chart } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 
 export async function getServerSideProps(context) {
   const { req } = context;
@@ -50,6 +52,9 @@ interface Patient {
   medicalHistory: string[];
   currentDiagnosis: string;
   treatment: string;
+  appointments: string[];
+  labResults: string[];
+  lastVisit: string;
 }
 
 const Patients = ({ patients }: { patients: Patient[] }) => {
@@ -90,82 +95,115 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
     }
   };
 
+  // Example of patient health data (for charting)
+  const patientHealthData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+    datasets: [
+      {
+        label: 'Weight',
+        data: [75, 78, 77, 76, 75, 74, 72, 71],
+        backgroundColor: 'rgba(75,192,192,0.2)',
+        borderColor: 'rgba(75,192,192,1)',
+        borderWidth: 1,
+      },
+      {
+        label: 'Blood Pressure',
+        data: [120, 122, 118, 115, 120, 124, 125, 123],
+        backgroundColor: 'rgba(255,99,132,0.2)',
+        borderColor: 'rgba(255,99,132,1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-8 px-4">
-      <div className="max-w-4xl w-full bg-white shadow-xl rounded-lg overflow-hidden">
-        <h3 className="text-3xl font-semibold text-center text-blue-700 py-4 border-b">Patients List</h3>
-        {patients.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-4">
-            {patients.map((patient) => (
-              <div
-                key={patient._id}
-                className="bg-white rounded-lg shadow-md p-5 hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-                onClick={() => handlePatientClick(patient._id)}
-              >
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-xl font-semibold text-gray-800">{patient.name}</span>
-                  <span className="text-gray-500">{patient.age} {patient.age > 1 ? 'years' : 'year'}</span>
-                </div>
-                <p className="text-gray-700 mb-2">{patient.contact}</p>
-                <p className="text-gray-500 text-sm">{patient.gender}</p>
-                <div className="flex justify-between items-center mt-4 text-sm">
-                  <button className="text-blue-600 hover:text-blue-800">View Profile</button>
-                  <button className="text-yellow-600 hover:text-yellow-800">Edit</button>
-                  <button className="text-red-600 hover:text-red-800">Delete</button>
-                </div>
+      {/* Patient List with Filters */}
+      <div className="max-w-6xl w-full bg-white shadow-xl rounded-lg p-6">
+        <h3 className="text-3xl font-semibold text-center text-blue-700 py-4">Patients Dashboard</h3>
+        <div className="flex justify-between mb-4">
+          <input
+            type="text"
+            placeholder="Search by Name or ID"
+            className="border rounded px-4 py-2 w-1/3"
+          />
+          <select className="border rounded px-4 py-2">
+            <option value="">Filter by Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+          <button className="bg-blue-600 text-white py-2 px-4 rounded-lg">Add New Patient</button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {patients.map((patient) => (
+            <div
+              key={patient._id}
+              className="bg-white rounded-lg shadow-md p-5 hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+              onClick={() => handlePatientClick(patient._id)}
+            >
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-xl font-semibold text-gray-800">{patient.name}</span>
+                <span className="text-gray-500">{patient.age} years</span>
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-center text-gray-500 p-6">No patients found. Please add a patient to the list.</p>
-        )}
+              <p className="text-gray-700 mb-2">{patient.contact}</p>
+              <p className="text-gray-500 text-sm">{patient.gender}</p>
+              <div className="flex justify-between items-center mt-4 text-sm">
+                <button className="text-blue-600 hover:text-blue-800">View Profile</button>
+                <button className="text-yellow-600 hover:text-yellow-800">Edit</button>
+                <button className="text-red-600 hover:text-red-800">Delete</button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
+      {/* Patient Detail Modal */}
       {selectedPatient && (
-        <div className="max-w-3xl w-full bg-white shadow-xl rounded-lg mt-8 p-6">
-          <h4 className="text-2xl font-semibold text-center text-blue-700 mb-4">Patient Details</h4>
-          <div className="space-y-4">
-            <div className="flex justify-between">
-              <span className="font-medium">Name:</span>
-              <span>{selectedPatient.name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Age:</span>
-              <span>{selectedPatient.age} {selectedPatient.age > 1 ? 'years' : 'year'} old</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Gender:</span>
-              <span>{selectedPatient.gender}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Phone Number:</span>
-              <span>{selectedPatient.contact}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Address:</span>
-              <span>{selectedPatient.address}</span>
-            </div>
+        <div className="max-w-4xl w-full bg-white shadow-xl rounded-lg mt-8 p-6">
+          <h4 className="text-2xl font-semibold text-center text-blue-700 mb-4">Patient Profile</h4>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Basic Info */}
             <div>
-              <span className="font-medium">Medical History:</span>
-              <ul className="list-disc pl-6 space-y-1">
-                {selectedPatient.medicalHistory.map((history, index) => (
-                  <li key={index}>{history}</li>
-                ))}
-              </ul>
+              <div className="mb-4">
+                <span className="font-medium">Name:</span>
+                <span>{selectedPatient.name}</span>
+              </div>
+              <div className="mb-4">
+                <span className="font-medium">Age:</span>
+                <span>{selectedPatient.age}</span>
+              </div>
+              <div className="mb-4">
+                <span className="font-medium">Contact:</span>
+                <span>{selectedPatient.contact}</span>
+              </div>
+              <div className="mb-4">
+                <span className="font-medium">Gender:</span>
+                <span>{selectedPatient.gender}</span>
+              </div>
+              <div className="mb-4">
+                <span className="font-medium">Address:</span>
+                <span>{selectedPatient.address}</span>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Current Diagnosis:</span>
-              <span>{selectedPatient.currentDiagnosis}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Treatment:</span>
-              <span>{selectedPatient.treatment}</span>
+
+            {/* Health Chart */}
+            <div>
+              <h5 className="text-xl font-medium mb-4">Health Data</h5>
+              <Bar data={patientHealthData} options={{ responsive: true }} />
             </div>
           </div>
-          <div className="mt-6 flex justify-between">
-            <button className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300">Edit Info</button>
-            <button className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-300">Add Notes</button>
-            <button className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition duration-300">Remove Patient</button>
+
+          {/* History and Actions */}
+          <div className="mt-8">
+            <h5 className="text-xl font-medium">Medical History</h5>
+            <ul className="list-disc pl-6 mb-6">
+              {selectedPatient.medicalHistory.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+            <button className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-300">
+              Add New Record
+            </button>
           </div>
         </div>
       )}
