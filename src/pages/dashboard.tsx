@@ -138,35 +138,87 @@ const Dashboard = () => {
 </section>
 
         {/* Charts Section */}
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <h3 className="text-xl font-bold mb-4">Body Fluid Composition</h3>
-            <div className="h-40 bg-gray-100 rounded">[Bar Chart Placeholder]</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <h3 className="text-xl font-bold mb-4">Composition of Solids</h3>
-            <div className="h-40 bg-gray-100 rounded">[Pie Chart Placeholder]</div>
-          </div>
-        </section>
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  {/* Body Fluid Composition */}
+  <div className="bg-white p-6 rounded-lg shadow-lg">
+    <h3 className="text-lg font-semibold text-gray-700 mb-4">
+      Body Fluid Composition
+    </h3>
+    <img
+      src="/body-fluid-chart.jpg" // Replace with an actual chart image or library integration
+      alt="Body Fluid Composition Chart"
+      className="w-full"
+    />
+  </div>
+
+  {/* Composition of Solids */}
+  <div className="bg-white p-6 rounded-lg shadow-lg">
+    <h3 className="text-lg font-semibold text-gray-700 mb-4">
+      Composition of Solids
+    </h3>
+    <img
+      src="/solid-composition-chart.jpg" // Replace with an actual chart image or library integration
+      alt="Solid Composition Chart"
+      className="w-full"
+    />
+  </div>
+</section>
+
 
         {/* Upcoming Events */}
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <h3 className="text-xl font-bold mb-4">Upcoming Checkups</h3>
-            <ul className="text-gray-600">
-              <li className="mb-2">🦷 Dental Health - Jan 5, 2024</li>
-              <li className="mb-2">🧠 BrainIQ Test - Jan 15, 2024</li>
-              <li>🩺 General Checkup - Feb 1, 2024</li>
-            </ul>
-          </div>
-          <div className="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-6 rounded-xl shadow-md flex items-center justify-between">
-            <FaMoneyBillWave className="text-4xl" />
-            <div>
-              <h3 className="text-2xl font-bold">$24,000</h3>
-              <p className="text-sm">Insurance Balance</p>
-            </div>
-          </div>
-        </section>
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+  {/* Upcoming Check-Up */}
+  <div className="bg-white p-6 rounded-lg shadow-lg">
+    <h3 className="text-lg font-semibold text-gray-700 mb-4">
+      Upcoming Check-Up
+    </h3>
+    <div className="border rounded-lg p-4 text-center">
+      <p className="text-sm font-medium text-gray-600">January 2024</p>
+      <div className="grid grid-cols-7 gap-2 mt-4">
+        {[...Array(31)].map((_, index) => (
+          <span
+            key={index}
+            className={`text-sm p-2 rounded-full ${
+              index + 1 === 10
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-600'
+            }`}
+          >
+            {index + 1}
+          </span>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  {/* Last Health Check */}
+  <div className="bg-white p-6 rounded-lg shadow-lg col-span-2">
+    <h3 className="text-lg font-semibold text-gray-700 mb-4">
+      Last Health Check
+    </h3>
+    <ul className="space-y-4">
+      <li className="flex justify-between items-center">
+        <p className="text-sm font-medium text-gray-600">
+          Dental Health - Dec 10, 2023
+        </p>
+        <span className="text-xs text-gray-500">Completed</span>
+      </li>
+      <li className="flex justify-between items-center">
+        <p className="text-sm font-medium text-gray-600">
+          BrainIQ Test - Oct 20, 2023
+        </p>
+        <span className="text-xs text-gray-500">Completed</span>
+      </li>
+      <li className="flex justify-between items-center">
+        <p className="text-sm font-medium text-gray-600">
+          Regular Kidney Check - Aug 15, 2023
+        </p>
+        <span className="text-xs text-gray-500">Completed</span>
+      </li>
+    </ul>
+  </div>
+</section>
+
       </main>
     </div>
   );
