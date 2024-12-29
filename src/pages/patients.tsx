@@ -1,8 +1,27 @@
 import axios from 'axios';
 import { useState, useEffect } from 'react';
 import cookie from 'cookie';
-import { Chart } from 'react-chartjs-2';
+import { useRouter } from 'next/router';
 import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+
+// Register the necessary components in Chart.js
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 export async function getServerSideProps(context) {
   const { req } = context;
@@ -116,6 +135,12 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
     ],
   };
 
+  const router = useRouter();
+
+  const navigateToAddPatient = () => {
+    router.push('/add-patient');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-8 px-4">
       {/* Patient List with Filters */}
@@ -132,7 +157,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
             <option value="Male">Male</option>
             <option value="Female">Female</option>
           </select>
-          <button className="bg-blue-600 text-white py-2 px-4 rounded-lg">Add New Patient</button>
+          <button onClick={navigateToAddPatient} className="bg-blue-600 text-white py-2 px-4 rounded-lg">Add New Patient</button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {patients.map((patient) => (
@@ -195,19 +220,18 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
 
           {/* History and Actions */}
           <div>
-  <h5 className="text-xl font-medium">Medical History</h5>
-  {/* Safeguard to ensure `selectedPatient` and `medicalHistory` are valid */}
-  {selectedPatient?.medicalHistory?.length > 0 ? (
-    <ul className="list-disc pl-6 mb-6">
-      {selectedPatient.medicalHistory.map((item, idx) => (
-        <li key={idx}>{item}</li>
-      ))}
-    </ul>
-  ) : (
-    <p className="text-gray-500">No medical history available.</p>
-  )}
-</div>
-
+            <h5 className="text-xl font-medium">Medical History</h5>
+            {/* Safeguard to ensure `selectedPatient` and `medicalHistory` are valid */}
+            {selectedPatient?.medicalHistory?.length > 0 ? (
+              <ul className="list-disc pl-6 mb-6">
+                {selectedPatient.medicalHistory.map((item, idx) => (
+                  <li key={idx}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500">No medical history available.</p>
+            )}
+          </div>
         </div>
       )}
     </div>
