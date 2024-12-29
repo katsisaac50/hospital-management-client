@@ -1,7 +1,11 @@
 import Link from 'next/link';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
+import { useState } from 'react';
 import { FaUser, FaStethoscope, FaCalendarAlt, FaFileAlt, FaHeart, FaChartPie, FaMoneyBillWave } from 'react-icons/fa';
 
 const Dashboard = () => {
+  const [selectedDate, setSelectedDate] = useState(new Date());
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
@@ -168,28 +172,20 @@ const Dashboard = () => {
         {/* Upcoming Events */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
   {/* Upcoming Check-Up */}
+  {/* Interactive Upcoming Check-Up Calendar */}
   <div className="bg-white p-6 rounded-lg shadow-lg">
-    <h3 className="text-lg font-semibold text-gray-700 mb-4">
-      Upcoming Check-Up
-    </h3>
-    <div className="border rounded-lg p-4 text-center">
-      <p className="text-sm font-medium text-gray-600">January 2024</p>
-      <div className="grid grid-cols-7 gap-2 mt-4">
-        {[...Array(31)].map((_, index) => (
-          <span
-            key={index}
-            className={`text-sm p-2 rounded-full ${
-              index + 1 === 10
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-600'
-            }`}
-          >
-            {index + 1}
-          </span>
-        ))}
+        <h3 className="text-lg font-semibold text-gray-700 mb-4">
+          Upcoming Check-Up
+        </h3>
+        <Calendar
+          onChange={setSelectedDate}
+          value={selectedDate}
+          className="react-calendar"
+        />
+        <p className="text-sm text-gray-600 mt-4">
+          Selected Date: <span className="font-medium">{selectedDate.toDateString()}</span>
+        </p>
       </div>
-    </div>
-  </div>
 
   {/* Last Health Check */}
   <div className="bg-white p-6 rounded-lg shadow-lg col-span-2">
@@ -216,6 +212,16 @@ const Dashboard = () => {
         <span className="text-xs text-gray-500">Completed</span>
       </li>
     </ul>
+  </div>
+</section>
+{/* Insurance Balance Section */}
+<section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+  <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
+    <h3 className="text-lg font-semibold text-gray-700 mb-4">Insurance Balance</h3>
+    <p className="text-2xl font-bold text-green-600 mb-4">$24,000</p>
+    <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all">
+      View Card
+    </button>
   </div>
 </section>
 
