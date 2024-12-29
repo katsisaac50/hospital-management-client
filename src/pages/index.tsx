@@ -1,20 +1,3 @@
-import Navbar from '../components/Navbar';
-//import Link from 'next/link';
-
-// const Home = () => {
-//   return (
-//     <div>
-//       <h1>Welcome to Hospital Management</h1>
-//       <Navbar />
-//       {/* <nav>
-//         <Link href="/patients">Patients</Link> | <Link href="/doctors">Doctors</Link>
-//       </nav> */}
-//     </div>
-//   );
-// };
-
-// export default Home;
-
 import Link from 'next/link';
 
 const LandingPage = () => {
@@ -23,25 +6,6 @@ const LandingPage = () => {
       {/* Header */}
       <header className="p-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold">Hospital Management System</h1>
-        <nav>
-          <ul className="flex space-x-4">
-            <li>
-              <Link href="/dashboard" legacyBehavior>
-                <a className="hover:text-gray-300">Dashboard</a>
-              </Link>
-            </li>
-            <li>
-              <Link href="/patients" legacyBehavior>
-                <a className="hover:text-gray-300">Patients</a>
-              </Link>
-            </li>
-            <li>
-              <Link href="/add-patient" legacyBehavior>
-                <a className="hover:text-gray-300">Add Patient</a>
-              </Link>
-            </li>
-          </ul>
-        </nav>
       </header>
 
       {/* Hero Section */}
@@ -50,7 +14,7 @@ const LandingPage = () => {
         <p className="text-lg mb-8">
           Streamline hospital operations, manage patients, and enhance care with our cutting-edge platform.
         </p>
-        <Link href="/dashboard" legacyBehavior>
+        <Link href="/login" legacyBehavior>
           <a className="px-6 py-3 bg-white text-blue-600 font-semibold rounded shadow-lg hover:bg-gray-100">
             Get Started
           </a>
