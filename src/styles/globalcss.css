@@ -23,13 +23,14 @@ nav ul li {
   background: #ffffff;
   border-radius: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
+  padding: 1rem;
   font-family: 'Inter', sans-serif;
   width: 100%;
+  aspect-ratio: 1; /* Ensures a perfect square */
 }
 
 .react-calendar__tile {
-  height: 3rem;
+  height: calc(100% / 7); /* Ensures tiles are proportional to the square */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -89,7 +90,4 @@ nav ul li {
   background: #e0f2fe;
   color: #0284c7;
   border-radius: 0.5rem;
-}
-.react-calendar__tile--neighboringMonth {
-  color: #9ca3af;
 }
