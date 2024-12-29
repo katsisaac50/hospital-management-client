@@ -102,29 +102,40 @@ const Dashboard = () => {
 
 
         {/* Quick Stats */}
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-r from-green-400 to-green-600 text-white p-6 rounded-xl shadow-md flex items-center">
-            <FaHeart className="text-4xl mr-4" />
-            <div>
-              <h3 className="text-2xl font-bold">80 bpm</h3>
-              <p className="text-sm">Heart Rate</p>
-            </div>
-          </div>
-          <div className="bg-gradient-to-r from-blue-400 to-blue-600 text-white p-6 rounded-xl shadow-md flex items-center">
-            <FaStethoscope className="text-4xl mr-4" />
-            <div>
-              <h3 className="text-2xl font-bold">4.75 liters</h3>
-              <p className="text-sm">Lung Capacity</p>
-            </div>
-          </div>
-          <div className="bg-gradient-to-r from-purple-400 to-purple-600 text-white p-6 rounded-xl shadow-md flex items-center">
-            <FaChartPie className="text-4xl mr-4" />
-            <div>
-              <h3 className="text-2xl font-bold">5 million/ml</h3>
-              <p className="text-sm">Blood Cells</p>
-            </div>
-          </div>
-        </section>
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+  {/* Heart Rate */}
+  <div className="bg-white p-6 rounded-lg shadow-lg flex justify-between items-center">
+    <div>
+      <h3 className="text-lg font-semibold text-gray-700">Heart Rate</h3>
+      <p className="text-2xl font-bold text-blue-600">80 bpm</p>
+    </div>
+    <span className="material-icons-outlined text-blue-600 text-4xl">
+      favorite
+    </span>
+  </div>
+
+  {/* Lung Capacity */}
+  <div className="bg-white p-6 rounded-lg shadow-lg flex justify-between items-center">
+    <div>
+      <h3 className="text-lg font-semibold text-gray-700">Lung Capacity</h3>
+      <p className="text-2xl font-bold text-green-600">4.75 L</p>
+    </div>
+    <span className="material-icons-outlined text-green-600 text-4xl">
+      air
+    </span>
+  </div>
+
+  {/* Blood Cells */}
+  <div className="bg-white p-6 rounded-lg shadow-lg flex justify-between items-center">
+    <div>
+      <h3 className="text-lg font-semibold text-gray-700">Blood Cells</h3>
+      <p className="text-2xl font-bold text-red-600">5 million/ml</p>
+    </div>
+    <span className="material-icons-outlined text-red-600 text-4xl">
+      bloodtype
+    </span>
+  </div>
+</section>
 
         {/* Charts Section */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
