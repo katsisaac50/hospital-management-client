@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from 'axios'; 
 import { useState, useEffect } from 'react';
 import cookie from 'cookie';
 import { useRouter } from 'next/router';
@@ -43,7 +43,7 @@ export async function getServerSideProps(context) {
         Authorization: `Bearer ${token}`,
       },
     });
-    
+
     return { props: { patients: response.data } };
   } catch (error) {
     console.error('Error fetching patients:', error);
@@ -68,7 +68,7 @@ interface Patient {
   gender: string;
   contact: string;
   address: string;
-  medicalHistory: string[];
+  medicalHistory: string; // Updated to string instead of an array
   currentDiagnosis: string;
   treatment: string;
   appointments: string[];
@@ -90,41 +90,36 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
 
   const handlePatientClick = async (patientId: string) => {
     const token = getAuthTokenFromCookies();
-  
+
     if (!token) {
       alert('Session expired or you are not logged in. Redirecting to login...');
       window.location.href = '/login';
       return;
     }
-  
+
     try {
       const response = await axios.get(`http://localhost:5000/api/patients/${patientId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-  
-      // Ensure medicalHistory is an array
+
+      // Ensure medicalHistory is a string
       const patientData = response.data;
-      console.log(patientData)
-      const medicalHistory = Array.isArray(patientData.medicalHistory)
-        ? patientData.medicalHistory
-        : [];  // Fallback to an empty array
-  
+
       setSelectedPatient({
         ...patientData,
-        medicalHistory,
+        medicalHistory: patientData.medicalHistory || 'No history available', // Fallback if medicalHistory is not present
       });
     } catch (error) {
       console.error('Error fetching patient details:', error);
-  
+
       if (error.response?.status === 401) {
         alert('Session expired. Please log in again.');
         window.location.href = '/login';
       }
     }
   };
-  
 
   // Example of patient health data (for charting)
   const patientHealthData = {
@@ -232,18 +227,10 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
 
           {/* History and Actions */}
           <div>
-  <h5 className="text-xl font-medium">Medical History</h5>
-  {/* Safeguard to ensure `selectedPatient` and `medicalHistory` are valid */}
-  {Array.isArray(selectedPatient?.medicalHistory) && selectedPatient.medicalHistory.length > 0 ? (
-    <ul className="list-disc pl-6 mb-6">
-      {selectedPatient.medicalHistory.map((item, idx) => (
-        <li key={idx}>{item}</li>
-      ))}
-    </ul>
-  ) : (
-    <p className="text-gray-500">No medical history available.</p>
-  )}
-</div>
+            <h5 className="text-xl font-medium">Medical History</h5>
+            {/* Safeguard to ensure `selectedPatient` and `medicalHistory` are valid */}
+            <p className="text-gray-500">{selectedPatient.medicalHistory}</p>
+          </div>
         </div>
       )}
     </div>
