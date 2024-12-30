@@ -1,43 +1,24 @@
-import axios from 'axios'; 
-import { useState } from 'react';
-import cookie from 'cookie';
-import { useRouter } from 'next/router';
-import { Bar } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-} from 'chart.js';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import axios from "axios";
+import { useState } from "react";
+import cookie from "cookie";
+import { useRouter } from "next/router";
 
 export async function getServerSideProps(context) {
   const { req } = context;
-  const cookies = cookie.parse(req.headers.cookie || '');
+  const cookies = cookie.parse(req.headers.cookie || "");
   const token = cookies.authToken;
 
   if (!token) {
     return {
       redirect: {
-        destination: '/login',
+        destination: "/login",
         permanent: false,
       },
     };
   }
 
   try {
-    const response = await axios.get('http://localhost:5000/api/patients', {
+    const response = await axios.get("http://localhost:5000/api/patients", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -45,12 +26,12 @@ export async function getServerSideProps(context) {
 
     return { props: { patients: response.data } };
   } catch (error) {
-    console.error('Error fetching patients:', error);
+    console.error("Error fetching patients:", error);
 
     if (error.response?.status === 401) {
       return {
         redirect: {
-          destination: '/login',
+          destination: "/login",
           permanent: false,
         },
       };
@@ -78,131 +59,111 @@ interface Patient {
   laboratory: string;
 }
 
-const calculateAge = (dob?: string): number | null => {
-  if (!dob) return null;
-  const birthDate = new Date(dob);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDifference = today.getMonth() - birthDate.getMonth();
-
-  // Adjust age if the birth date hasn't occurred yet this year
-  if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return age;
-};
-
 const Patients = ({ patients }: { patients: Patient[] }) => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-
-  const getAuthTokenFromCookies = () => {
-    const cookies = document.cookie.split('; ').reduce((acc, cookieStr) => {
-      const [key, value] = cookieStr.split('=');
-      acc[key] = value;
-      return acc;
-    }, {} as Record<string, string>);
-    return cookies.authToken || '';
-  };
-
-  const handlePatientClick = async (patientId: string) => {
-    const token = getAuthTokenFromCookies();
-
-    if (!token) {
-      alert('Session expired or you are not logged in. Redirecting to login...');
-      window.location.href = '/login';
-      return;
-    }
-
-    try {
-      const response = await axios.get(`http://localhost:5000/api/patients/${patientId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const patientData = response.data;
-      // Calculate age if not provided
-      if (!patientData.age) {
-        patientData.age = calculateAge(patientData.dob);
-      }
-
-      setSelectedPatient(patientData);
-    } catch (error) {
-      console.error('Error fetching patient details:', error);
-
-      if (error.response?.status === 401) {
-        alert('Session expired. Please log in again.');
-        window.location.href = '/login';
-      }
-    }
-  };
-
   const router = useRouter();
 
   const navigateToAddPatient = () => {
-    router.push('/add-patient');
+    router.push("/add-patient");
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-8 px-4">
-      <div className="max-w-6xl w-full bg-white shadow-xl rounded-lg p-6">
-        <h3 className="text-3xl font-semibold text-center text-blue-700 py-4">Patients Dashboard</h3>
-        <div className="flex justify-between mb-4">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-10 px-4">
+      <div className="w-full max-w-7xl bg-white rounded-lg shadow-lg p-6">
+        <h1 className="text-4xl font-bold text-center text-blue-600 mb-6">
+          Patients Dashboard
+        </h1>
+        <div className="flex flex-wrap gap-4 justify-between items-center mb-6">
           <input
             type="text"
             placeholder="Search by Name or ID"
-            className="border rounded px-4 py-2 w-1/3"
+            className="flex-1 border rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <select className="border rounded px-4 py-2">
+          <select className="border rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">Filter by Gender</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
           </select>
-          <button onClick={navigateToAddPatient} className="bg-blue-600 text-white py-2 px-4 rounded-lg">Add New Patient</button>
+          <button
+            onClick={navigateToAddPatient}
+            className="bg-blue-500 text-white rounded-lg px-6 py-2 hover:bg-blue-600 transition"
+          >
+            Add Patient
+          </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {patients.map((patient) => (
             <div
               key={patient._id}
-              className="bg-white rounded-lg shadow-md p-5 hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-              onClick={() => handlePatientClick(patient._id)}
+              className="bg-white p-5 rounded-lg shadow hover:shadow-lg transition hover:-translate-y-1 cursor-pointer"
+              onClick={() => setSelectedPatient(patient)}
             >
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-xl font-semibold text-gray-800">{patient.name}</span>
-                <span className="text-gray-500">
-                  {patient.age ?? calculateAge(patient.dob)} years
-                </span>
-              </div>
-              <p className="text-gray-700 mb-2">{patient.contact}</p>
-              <p className="text-gray-500 text-sm">{patient.gender}</p>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                {patient.name}
+              </h2>
+              <p className="text-gray-600 mb-1">
+                <strong>Age:</strong> {patient.age || "N/A"}
+              </p>
+              <p className="text-gray-600 mb-1">
+                <strong>Contact:</strong> {patient.contact}
+              </p>
+              <p className="text-gray-600">
+                <strong>Gender:</strong> {patient.gender}
+              </p>
             </div>
           ))}
         </div>
       </div>
 
       {selectedPatient && (
-        <div className="max-w-4xl w-full bg-white shadow-xl rounded-lg mt-8 p-6">
-          <h4 className="text-2xl font-semibold text-center text-blue-700 mb-4">Patient Profile</h4>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
-              <p><strong>Name:</strong> {selectedPatient.name}</p>
-              <p><strong>Age:</strong> {selectedPatient.age}</p>
-              <p><strong>Date of Birth:</strong> {selectedPatient.dob || 'Not provided'}</p>
-              <p><strong>Contact:</strong> {selectedPatient.contact}</p>
-              <p><strong>Gender:</strong> {selectedPatient.gender}</p>
-              <p><strong>Address:</strong> {selectedPatient.address}</p>
-              <p><strong>Physical Examination:</strong> {selectedPatient.physicalExamination || 'No data available'}</p>
-              <p><strong>Laboratory:</strong> {selectedPatient.laboratory || 'No data available'}</p>
-              <p><strong>Treatment:</strong> {selectedPatient.treatment || 'No data available'}</p>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-6 relative">
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
+              onClick={() => setSelectedPatient(null)}
+            >
+              ✕
+            </button>
+            <h2 className="text-2xl font-semibold text-blue-600 mb-4">
+              Patient Details
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <p>
+                  <strong>Name:</strong> {selectedPatient.name}
+                </p>
+                <p>
+                  <strong>Age:</strong> {selectedPatient.age || "N/A"}
+                </p>
+                <p>
+                  <strong>Gender:</strong> {selectedPatient.gender}
+                </p>
+                <p>
+                  <strong>Contact:</strong> {selectedPatient.contact}
+                </p>
+                <p>
+                  <strong>Address:</strong> {selectedPatient.address}
+                </p>
+              </div>
+              <div>
+                <p>
+                  <strong>Medical History:</strong> {selectedPatient.medicalHistory}
+                </p>
+                <p>
+                  <strong>Current Diagnosis:</strong> {selectedPatient.currentDiagnosis}
+                </p>
+                <p>
+  <strong>Lab Results:</strong>{" "}
+  {Array.isArray(selectedPatient.labResults)
+    ? selectedPatient.labResults.join(", ")
+    : "No lab results available"}
+</p>
+              </div>
             </div>
-          </div>
-          <div>
-            <h5 className="text-xl font-medium mt-4">Medical History</h5>
-            <p className="text-gray-500">{selectedPatient.medicalHistory}</p>
-          </div>
-          <div className="flex justify-between items-center mt-4 text-sm">
-                <button className="text-yellow-600 hover:text-yellow-800">Edit</button>
-                <button className="text-red-600 hover:text-red-800">Delete</button>
+            <div className="mt-4 flex justify-end space-x-4">
+              <button className="text-yellow-500 hover:text-yellow-700">Edit</button>
+              <button className="text-red-500 hover:text-red-700">Delete</button>
+            </div>
           </div>
         </div>
       )}
