@@ -276,7 +276,8 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
               </div>
             </div>
             ):(
-              <form onSubmit={handleFormSubmit} className="grid grid-cols-1 gap-4">
+              <form onSubmit={handleFormSubmit} className="grid grid-cols-1 gap-4 max-h-[70vh] overflow-y-auto">
+                {/* Name Field */}
                 <div>
                   <label className="block text-sm font-medium">Name</label>
                   <input
@@ -286,6 +287,20 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
                     className="w-full border rounded-lg px-4 py-2 shadow-sm"
                   />
                 </div>
+                
+                {/* Date of Birth Field */}
+                <div>
+                  <label className="block text-sm font-medium">Date of Birth</label>
+                  <input
+                    name="dob"
+                    type="date"
+                    value={formData.dob || ""}
+                    onChange={handleFormChange}
+                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                  />
+                </div>
+
+                {/* Contact Field */}
                 <div>
                   <label className="block text-sm font-medium">Contact</label>
                   <input
@@ -295,11 +310,72 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
                     className="w-full border rounded-lg px-4 py-2 shadow-sm"
                   />
                 </div>
+
+                {/* Address Field */}
                 <div>
                   <label className="block text-sm font-medium">Address</label>
                   <textarea
                     name="address"
                     value={formData.address || ""}
+                    onChange={handleFormChange}
+                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                  />
+                </div>
+
+                {/* Gender Field */}
+                <div>
+                  <label className="block text-sm font-medium">Gender</label>
+                  <select
+                    name="gender"
+                    value={formData.gender || ""}
+                    onChange={handleFormChange}
+                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+
+                {/* Medical History Field */}
+                <div>
+                  <label className="block text-sm font-medium">Medical History</label>
+                  <textarea
+                    name="medicalHistory"
+                    value={formData.medicalHistory || ""}
+                    onChange={handleFormChange}
+                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                  />
+                </div>
+
+                {/* Treatment Field */}
+                <div>
+                  <label className="block text-sm font-medium">Treatment</label>
+                  <textarea
+                    name="treatment"
+                    value={formData.treatment || ""}
+                    onChange={handleFormChange}
+                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                  />
+                </div>
+
+                {/* Physical Examination Field */}
+                <div>
+                  <label className="block text-sm font-medium">Physical Examination</label>
+                  <textarea
+                    name="physicalExamination"
+                    value={formData.physicalExamination || ""}
+                    onChange={handleFormChange}
+                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                  />
+                </div>
+
+                {/* Laboratory Field */}
+                <div>
+                  <label className="block text-sm font-medium">Laboratory Results</label>
+                  <textarea
+                    name="laboratory"
+                    value={formData.laboratory || ""}
                     onChange={handleFormChange}
                     className="w-full border rounded-lg px-4 py-2 shadow-sm"
                   />
@@ -312,12 +388,13 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
                 </button>
               </form>
             )}
-            <div>
+            {!isEditing && (
+              <>
+              <div>
               <h5 className="text-xl font-medium mt-4">Medical History</h5>
               <p className="text-gray-500">{selectedPatient.medicalHistory || 'No data available'}</p>
             </div>
-            {!isEditing && (
-              <div className="flex justify-end items-center mt-6">
+            <div className="flex justify-end items-center mt-6">
                 <button
                   onClick={handleEditClick}
                   className="text-yellow-600 hover:text-yellow-800 mr-4"
@@ -331,6 +408,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
                   {deleting ? "Deleting..." : "Delete"}  {/* Use deleting state */}
                 </button>
               </div>
+              </>
             )}
           </div>
         </div>
