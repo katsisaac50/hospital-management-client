@@ -124,23 +124,23 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-8 px-4">
-      <div className="max-w-6xl w-full bg-white shadow-xl rounded-lg p-6">
-        <h3 className="text-3xl font-semibold text-center text-blue-700 py-4">Patients Dashboard</h3>
-        <div className="flex justify-between mb-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col items-center justify-center py-8 px-4">
+      <div className="max-w-6xl w-full bg-white shadow-2xl rounded-lg p-6">
+        <h3 className="text-4xl font-semibold text-center text-blue-700 py-4">Patients Dashboard</h3>
+        <div className="flex justify-between mb-6">
           <input
             type="text"
             placeholder="Search by Name or ID"
-            className="border rounded px-4 py-2 w-1/3"
+            className="border rounded-lg px-4 py-2 w-1/3 shadow-sm focus:outline-blue-500"
           />
-          <select className="border rounded px-4 py-2">
+          <select className="border rounded-lg px-4 py-2 shadow-sm focus:outline-blue-500">
             <option value="">Filter by Gender</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
           </select>
           <button
             onClick={navigateToAddPatient}
-            className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
+            className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 shadow-lg transition"
           >
             Add New Patient
           </button>
@@ -149,7 +149,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
           {patients.map((patient) => (
             <div
               key={patient._id}
-              className="bg-white rounded-lg shadow-md p-5 hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+              className="bg-gradient-to-br from-white to-gray-100 rounded-lg shadow-md p-5 hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
               onClick={() => handlePatientClick(patient._id)}
             >
               <div className="flex justify-between items-center mb-3">
@@ -166,15 +166,15 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
       </div>
 
       {isModalOpen && selectedPatient && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-11/12 max-w-4xl p-6 relative">
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-2xl w-11/12 max-w-4xl p-8 relative animate-fade-in">
             <button
               className="absolute top-4 right-4 text-gray-600 hover:text-gray-800"
               onClick={closeModal}
             >
               ✕
             </button>
-            <h4 className="text-2xl font-semibold text-center text-blue-700 mb-4">Patient Profile</h4>
+            <h4 className="text-3xl font-semibold text-center text-blue-700 mb-4">Patient Profile</h4>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <p><strong>Name:</strong> {selectedPatient.name}</p>
@@ -198,10 +198,10 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
               <h5 className="text-xl font-medium mt-4">Medical History</h5>
               <p className="text-gray-500">{selectedPatient.medicalHistory || 'No data available'}</p>
             </div>
-            <div className="flex justify-between items-center mt-4 text-sm">
-              <button className="text-yellow-600 hover:text-yellow-800">Edit</button>
-              <button className="text-red-600 hover:text-red-800">Delete</button>
-            </div>
+            <div className="flex justify-end items-center mt-6">
+            <button className="text-yellow-600 hover:text-yellow-800 mr-4">Edit</button>
+            <button className="text-red-600 hover:text-red-800">Delete</button>
+          </div>
           </div>
         </div>
       )}
