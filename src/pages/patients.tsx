@@ -1,5 +1,5 @@
 import axios from 'axios'; 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import cookie from 'cookie';
 import { useRouter } from 'next/router';
 import { Bar } from 'react-chartjs-2';
@@ -63,7 +63,8 @@ export async function getServerSideProps(context) {
 interface Patient {
   _id: string;
   name: string;
-  age: number;
+  dob?: string;
+  age?: number;
   gender: string;
   contact: string;
   address: string;
@@ -76,6 +77,20 @@ interface Patient {
   physicalExamination: string;
   laboratory: string;
 }
+
+const calculateAge = (dob?: string): number | null => {
+  if (!dob) return null;
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDifference = today.getMonth() - birthDate.getMonth();
+
+  // Adjust age if the birth date hasn't occurred yet this year
+  if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+};
 
 const Patients = ({ patients }: { patients: Patient[] }) => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -105,7 +120,13 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
         },
       });
 
-      setSelectedPatient(response.data);
+      const patientData = response.data;
+      // Calculate age if not provided
+      if (!patientData.age) {
+        patientData.age = calculateAge(patientData.dob);
+      }
+
+      setSelectedPatient(patientData);
     } catch (error) {
       console.error('Error fetching patient details:', error);
 
@@ -148,15 +169,12 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
             >
               <div className="flex justify-between items-center mb-3">
                 <span className="text-xl font-semibold text-gray-800">{patient.name}</span>
-                <span className="text-gray-500">{patient.age} years</span>
+                <span className="text-gray-500">
+                  {patient.age ?? calculateAge(patient.dob)} years
+                </span>
               </div>
               <p className="text-gray-700 mb-2">{patient.contact}</p>
               <p className="text-gray-500 text-sm">{patient.gender}</p>
-              <div className="flex justify-between items-center mt-4 text-sm">
-                <button className="text-blue-600 hover:text-blue-800">View Profile</button>
-                <button className="text-yellow-600 hover:text-yellow-800">Edit</button>
-                <button className="text-red-600 hover:text-red-800">Delete</button>
-              </div>
             </div>
           ))}
         </div>
@@ -169,6 +187,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
             <div>
               <p><strong>Name:</strong> {selectedPatient.name}</p>
               <p><strong>Age:</strong> {selectedPatient.age}</p>
+              <p><strong>Date of Birth:</strong> {selectedPatient.dob || 'Not provided'}</p>
               <p><strong>Contact:</strong> {selectedPatient.contact}</p>
               <p><strong>Gender:</strong> {selectedPatient.gender}</p>
               <p><strong>Address:</strong> {selectedPatient.address}</p>
@@ -180,6 +199,10 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
           <div>
             <h5 className="text-xl font-medium mt-4">Medical History</h5>
             <p className="text-gray-500">{selectedPatient.medicalHistory}</p>
+          </div>
+          <div className="flex justify-between items-center mt-4 text-sm">
+                <button className="text-yellow-600 hover:text-yellow-800">Edit</button>
+                <button className="text-red-600 hover:text-red-800">Delete</button>
           </div>
         </div>
       )}
