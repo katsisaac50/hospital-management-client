@@ -276,8 +276,9 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
               </div>
             </div>
             ):(
-              <form onSubmit={handleFormSubmit} className="grid grid-cols-1 gap-4 max-h-[70vh] overflow-y-auto">
-                {/* Name Field */}
+              <form onSubmit={handleFormSubmit} className="grid grid-cols-1 gap-4">
+                <div className="max-h-[70vh] overflow-y-auto">
+                  {/* Name Field */}
                 <div>
                   <label className="block text-sm font-medium">Name</label>
                   <input
@@ -379,6 +380,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
                     onChange={handleFormChange}
                     className="w-full border rounded-lg px-4 py-2 shadow-sm"
                   />
+                </div>
                 </div>
                 <button
                   type="submit"
