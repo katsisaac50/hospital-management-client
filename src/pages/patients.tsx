@@ -72,9 +72,19 @@ const calculateAge = (dob?: string): number | null => {
   return age;
 };
 
+const formatDate = (dateString?: string): string => {
+  if (!dateString) return 'Not provided';
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-GB', { dateStyle: 'long' }).format(date); // e.g., "24 December 2024"
+};
+
 const Patients = ({ patients }: { patients: Patient[] }) => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<Partial<Patient>>({});
+  const [saving, setSaving] = useState(false);  // State for save action
+  const [deleting, setDeleting] = useState(false);  // State for delete action
   const router = useRouter();
 
   const handlePatientClick = async (patientId: string) => {
@@ -117,6 +127,74 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   const closeModal = () => {
     setSelectedPatient(null);
     setIsModalOpen(false);
+    setIsEditing(false);
+    setFormData({});
+  };
+
+  const handleEditClick = () => {
+    if (selectedPatient) {
+      setFormData(selectedPatient);
+      setIsEditing(true);
+    }
+  };
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData || !selectedPatient) return;
+
+    try {
+      setSaving(true);  // Set saving to true when saving data
+      const token = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('authToken='))
+        ?.split('=')[1];
+
+      await axios.put(
+        `http://localhost:5000/api/patients/${selectedPatient._id}`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert('Patient updated successfully.');
+      closeModal();
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating patient:', error);
+      alert('Failed to update the patient. Please try again.');
+    } finally {
+      setSaving(false);  // Reset saving state after completion
+    }
+  };
+
+  const handleDeleteClick = async () => {
+    if (!selectedPatient) return;
+    const confirmation = confirm('Are you sure you want to delete this patient?');
+
+    if (!confirmation) return;
+
+    try {
+      setDeleting(true);  // Set deleting to true when deleting data
+      const token = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('authToken='))
+        ?.split('=')[1];
+
+      await axios.delete(`http://localhost:5000/api/patients/${selectedPatient._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert('Patient deleted successfully.');
+      closeModal();
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting patient:', error);
+      alert('Failed to delete the patient. Please try again.');
+    } finally {
+      setDeleting(false);  // Reset deleting state after completion
+    }
   };
 
   const navigateToAddPatient = () => {
@@ -174,14 +252,17 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
             >
               ✕
             </button>
-            <h4 className="text-3xl font-semibold text-center text-blue-700 mb-4">Patient Profile</h4>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <h4 className="text-3xl font-semibold text-center text-blue-700 mb-4">{isEditing ? "Edit Patient Details" : "Patient Profile"}</h4>
+            {!isEditing ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <p><strong>Name:</strong> {selectedPatient.name}</p>
                 <p>
                   <strong>Age:</strong> {selectedPatient.age ?? calculateAge(selectedPatient.dob) || 'Not provided'}
                 </p>
-                <p><strong>Date of Birth:</strong> {selectedPatient.dob || 'Not provided'}</p>
+                <p>
+                  <strong>Date of Birth:</strong> {formatDate(selectedPatient.dob)|| 'Not provided'}
+                </p>
                 <p><strong>Contact:</strong> {selectedPatient.contact}</p>
                 <p><strong>Gender:</strong> {selectedPatient.gender}</p>
                 <p><strong>Address:</strong> {selectedPatient.address}</p>
@@ -194,14 +275,63 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
                 <p><strong>Treatment:</strong> {selectedPatient.treatment || 'No data available'}</p>
               </div>
             </div>
+            ):(
+              <form onSubmit={handleFormSubmit} className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium">Name</label>
+                  <input
+                    name="name"
+                    value={formData.name || ""}
+                    onChange={handleFormChange}
+                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">Contact</label>
+                  <input
+                    name="contact"
+                    value={formData.contact || ""}
+                    onChange={handleFormChange}
+                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">Address</label>
+                  <textarea
+                    name="address"
+                    value={formData.address || ""}
+                    onChange={handleFormChange}
+                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 shadow-lg transition"
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
+              </form>
+            )}
             <div>
               <h5 className="text-xl font-medium mt-4">Medical History</h5>
               <p className="text-gray-500">{selectedPatient.medicalHistory || 'No data available'}</p>
             </div>
-            <div className="flex justify-end items-center mt-6">
-            <button className="text-yellow-600 hover:text-yellow-800 mr-4">Edit</button>
-            <button className="text-red-600 hover:text-red-800">Delete</button>
-          </div>
+            {!isEditing && (
+              <div className="flex justify-end items-center mt-6">
+                <button
+                  onClick={handleEditClick}
+                  className="text-yellow-600 hover:text-yellow-800 mr-4"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={handleDeleteClick}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  {deleting ? "Deleting..." : "Delete"}  {/* Use deleting state */}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
