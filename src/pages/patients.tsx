@@ -90,29 +90,40 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
 
   const handlePatientClick = async (patientId: string) => {
     const token = getAuthTokenFromCookies();
-
+  
     if (!token) {
       alert('Session expired or you are not logged in. Redirecting to login...');
       window.location.href = '/login';
       return;
     }
-
+  
     try {
       const response = await axios.get(`http://localhost:5000/api/patients/${patientId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setSelectedPatient(response.data);
+  
+      // Ensure medicalHistory is an array
+      const patientData = response.data;
+      const medicalHistory = Array.isArray(patientData.medicalHistory)
+        ? patientData.medicalHistory
+        : [];  // Fallback to an empty array
+  
+      setSelectedPatient({
+        ...patientData,
+        medicalHistory,
+      });
     } catch (error) {
       console.error('Error fetching patient details:', error);
-
+  
       if (error.response?.status === 401) {
         alert('Session expired. Please log in again.');
         window.location.href = '/login';
       }
     }
   };
+  
 
   // Example of patient health data (for charting)
   const patientHealthData = {
@@ -220,18 +231,18 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
 
           {/* History and Actions */}
           <div>
-            <h5 className="text-xl font-medium">Medical History</h5>
-            {/* Safeguard to ensure `selectedPatient` and `medicalHistory` are valid */}
-            {selectedPatient?.medicalHistory?.length > 0 ? (
-              <ul className="list-disc pl-6 mb-6">
-                {selectedPatient.medicalHistory.map((item, idx) => (
-                  <li key={idx}>{item}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500">No medical history available.</p>
-            )}
-          </div>
+  <h5 className="text-xl font-medium">Medical History</h5>
+  {/* Safeguard to ensure `selectedPatient` and `medicalHistory` are valid */}
+  {Array.isArray(selectedPatient?.medicalHistory) && selectedPatient.medicalHistory.length > 0 ? (
+    <ul className="list-disc pl-6 mb-6">
+      {selectedPatient.medicalHistory.map((item, idx) => (
+        <li key={idx}>{item}</li>
+      ))}
+    </ul>
+  ) : (
+    <p className="text-gray-500">No medical history available.</p>
+  )}
+</div>
         </div>
       )}
     </div>
