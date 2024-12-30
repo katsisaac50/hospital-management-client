@@ -13,7 +13,6 @@ import {
   Legend
 } from 'chart.js';
 
-// Register the necessary components in Chart.js
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -68,12 +67,14 @@ interface Patient {
   gender: string;
   contact: string;
   address: string;
-  medicalHistory: string; // Updated to string instead of an array
+  medicalHistory: string;
   currentDiagnosis: string;
   treatment: string;
   appointments: string[];
   labResults: string[];
   lastVisit: string;
+  physicalExamination: string;
+  laboratory: string;
 }
 
 const Patients = ({ patients }: { patients: Patient[] }) => {
@@ -84,7 +85,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
       const [key, value] = cookieStr.split('=');
       acc[key] = value;
       return acc;
-    }, {});
+    }, {} as Record<string, string>);
     return cookies.authToken || '';
   };
 
@@ -104,13 +105,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
         },
       });
 
-      // Ensure medicalHistory is a string
-      const patientData = response.data;
-
-      setSelectedPatient({
-        ...patientData,
-        medicalHistory: patientData.medicalHistory || 'No history available', // Fallback if medicalHistory is not present
-      });
+      setSelectedPatient(response.data);
     } catch (error) {
       console.error('Error fetching patient details:', error);
 
@@ -121,27 +116,6 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
     }
   };
 
-  // Example of patient health data (for charting)
-  const patientHealthData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-    datasets: [
-      {
-        label: 'Weight',
-        data: [75, 78, 77, 76, 75, 74, 72, 71],
-        backgroundColor: 'rgba(75,192,192,0.2)',
-        borderColor: 'rgba(75,192,192,1)',
-        borderWidth: 1,
-      },
-      {
-        label: 'Blood Pressure',
-        data: [120, 122, 118, 115, 120, 124, 125, 123],
-        backgroundColor: 'rgba(255,99,132,0.2)',
-        borderColor: 'rgba(255,99,132,1)',
-        borderWidth: 1,
-      },
-    ],
-  };
-
   const router = useRouter();
 
   const navigateToAddPatient = () => {
@@ -150,7 +124,6 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-8 px-4">
-      {/* Patient List with Filters */}
       <div className="max-w-6xl w-full bg-white shadow-xl rounded-lg p-6">
         <h3 className="text-3xl font-semibold text-center text-blue-700 py-4">Patients Dashboard</h3>
         <div className="flex justify-between mb-4">
@@ -189,46 +162,23 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
         </div>
       </div>
 
-      {/* Patient Detail Modal */}
       {selectedPatient && (
         <div className="max-w-4xl w-full bg-white shadow-xl rounded-lg mt-8 p-6">
           <h4 className="text-2xl font-semibold text-center text-blue-700 mb-4">Patient Profile</h4>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Basic Info */}
             <div>
-              <div className="mb-4">
-                <span className="font-medium">Name:</span>
-                <span>{selectedPatient.name}</span>
-              </div>
-              <div className="mb-4">
-                <span className="font-medium">Age:</span>
-                <span>{selectedPatient.age}</span>
-              </div>
-              <div className="mb-4">
-                <span className="font-medium">Contact:</span>
-                <span>{selectedPatient.contact}</span>
-              </div>
-              <div className="mb-4">
-                <span className="font-medium">Gender:</span>
-                <span>{selectedPatient.gender}</span>
-              </div>
-              <div className="mb-4">
-                <span className="font-medium">Address:</span>
-                <span>{selectedPatient.address}</span>
-              </div>
-            </div>
-
-            {/* Health Chart */}
-            <div>
-              <h5 className="text-xl font-medium mb-4">Health Data</h5>
-              <Bar data={patientHealthData} options={{ responsive: true }} />
+              <p><strong>Name:</strong> {selectedPatient.name}</p>
+              <p><strong>Age:</strong> {selectedPatient.age}</p>
+              <p><strong>Contact:</strong> {selectedPatient.contact}</p>
+              <p><strong>Gender:</strong> {selectedPatient.gender}</p>
+              <p><strong>Address:</strong> {selectedPatient.address}</p>
+              <p><strong>Physical Examination:</strong> {selectedPatient.physicalExamination || 'No data available'}</p>
+              <p><strong>Laboratory:</strong> {selectedPatient.laboratory || 'No data available'}</p>
+              <p><strong>Treatment:</strong> {selectedPatient.treatment || 'No data available'}</p>
             </div>
           </div>
-
-          {/* History and Actions */}
           <div>
-            <h5 className="text-xl font-medium">Medical History</h5>
-            {/* Safeguard to ensure `selectedPatient` and `medicalHistory` are valid */}
+            <h5 className="text-xl font-medium mt-4">Medical History</h5>
             <p className="text-gray-500">{selectedPatient.medicalHistory}</p>
           </div>
         </div>
