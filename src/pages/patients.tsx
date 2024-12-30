@@ -43,7 +43,7 @@ export async function getServerSideProps(context) {
         Authorization: `Bearer ${token}`,
       },
     });
-
+    
     return { props: { patients: response.data } };
   } catch (error) {
     console.error('Error fetching patients:', error);
@@ -106,6 +106,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   
       // Ensure medicalHistory is an array
       const patientData = response.data;
+      console.log(patientData)
       const medicalHistory = Array.isArray(patientData.medicalHistory)
         ? patientData.medicalHistory
         : [];  // Fallback to an empty array
