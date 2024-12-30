@@ -17,12 +17,18 @@ const AddPatientForm = () => {
   const [maritalStatus, setMaritalStatus] = useState('');
   const [occupation, setOccupation] = useState('');
 
+  // Function to retrieve token from cookies
+  const getTokenFromCookie = () => {
+    const match = document.cookie.match(/(^| )authToken=([^;]+)/);
+    return match ? match[2] : null;
+  };
+
   const handleSubmit = async (e) => {
 
     e.preventDefault();
 
     // Retrieve token from localStorage (or where you store it)
-    const token = localStorage.getItem('authToken');
+    const token = getTokenFromCookie();
     console.log(token);
     
     if (!token) {
