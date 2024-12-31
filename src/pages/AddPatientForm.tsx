@@ -25,7 +25,7 @@ const AddPatientForm = () => {
     return match ? match[2] : null;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const token = getTokenFromCookie();

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import Calendar from 'react-calendar';
+import Calendar, {CalendarValue} from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { useState } from 'react';
 import Image from 'next/image';
@@ -40,8 +40,17 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({ href, icon, title }) =>
 );
 
 const Dashboard: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const router = useRouter();
+
+  const handleDateChange = (value: CalendarValue) => {
+    // Ensure only the desired type is stored in the state
+    if (value instanceof Date || (Array.isArray(value) && value.every(v => v instanceof Date))) {
+      setSelectedDate(value);
+    } else {
+      setSelectedDate(null);
+    }
+  };
 
   // Handle logout functionality
   const handleLogout = () => {
@@ -126,13 +135,17 @@ const Dashboard: React.FC = () => {
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">Upcoming Check-Up</h3>
             <Calendar
-              onChange={setSelectedDate}
+              onChange={handleDateChange} 
               value={selectedDate}
-              className="react-calendar"
             />
             <p className="text-sm text-gray-600 mt-4">
-              Selected Date: <span className="font-medium">{selectedDate.toDateString()}</span>
-            </p>
+        Selected Date:{" "}
+        <span className="font-medium">
+          {Array.isArray(selectedDate)
+            ? `${selectedDate[0]?.toDateString()} - ${selectedDate[1]?.toDateString()}`
+            : selectedDate?.toDateString() || "None"}
+        </span>
+      </p>
           </div>
 
           {/* Last Health Check */}
