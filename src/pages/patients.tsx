@@ -1,24 +1,26 @@
-import axios from 'axios';
-import { useState } from 'react';
-import cookie from 'cookie';
-import { useRouter } from 'next/router';
+import axios from "axios";
+import { useState } from "react";
+import cookie from "cookie";
+import { useRouter } from "next/router";
 
-export async function getServerSideProps(context) {
+export async function getServerSideProps(context: {
+  req: { headers: { cookie?: string } };
+}) {
   const { req } = context;
-  const cookies = cookie.parse(req.headers.cookie || '');
+  const cookies = cookie.parse(req.headers.cookie || "");
   const token = cookies.authToken;
 
   if (!token) {
     return {
       redirect: {
-        destination: '/login',
+        destination: "/login",
         permanent: false,
       },
     };
   }
 
   try {
-    const response = await axios.get('http://localhost:5000/api/patients', {
+    const response = await axios.get("http://localhost:5000/api/patients", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -26,12 +28,12 @@ export async function getServerSideProps(context) {
 
     return { props: { patients: response.data } };
   } catch (error) {
-    console.error('Error fetching patients:', error);
+    console.error("Error fetching patients:", error);
 
-    if (error.response?.status === 401) {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
       return {
         redirect: {
-          destination: '/login',
+          destination: "/login",
           permanent: false,
         },
       };
@@ -40,7 +42,6 @@ export async function getServerSideProps(context) {
     return { props: { patients: [] } };
   }
 }
-
 interface Patient {
   _id: string;
   name: string;
@@ -66,16 +67,19 @@ const calculateAge = (dob?: string): number | null => {
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDifference = today.getMonth() - birthDate.getMonth();
 
-  if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+  if (
+    monthDifference < 0 ||
+    (monthDifference === 0 && today.getDate() < birthDate.getDate())
+  ) {
     age--;
   }
   return age;
 };
 
 const formatDate = (dateString?: string): string => {
-  if (!dateString) return 'Not provided';
+  if (!dateString) return "Not provided";
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-GB', { dateStyle: 'long' }).format(date); // e.g., "24 December 2024"
+  return new Intl.DateTimeFormat("en-GB", { dateStyle: "long" }).format(date); // e.g., "24 December 2024"
 };
 
 const Patients = ({ patients }: { patients: Patient[] }) => {
@@ -83,28 +87,33 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<Patient>>({});
-  const [saving, setSaving] = useState(false);  // State for save action
-  const [deleting, setDeleting] = useState(false);  // State for delete action
+  const [saving, setSaving] = useState(false); // State for save action
+  const [deleting, setDeleting] = useState(false); // State for delete action
   const router = useRouter();
 
   const handlePatientClick = async (patientId: string) => {
     const token = document.cookie
-      .split('; ')
-      .find((row) => row.startsWith('authToken='))
-      ?.split('=')[1];
+      .split("; ")
+      .find((row) => row.startsWith("authToken="))
+      ?.split("=")[1];
 
     if (!token) {
-      alert('Session expired or you are not logged in. Redirecting to login...');
-      window.location.href = '/login';
+      alert(
+        "Session expired or you are not logged in. Redirecting to login..."
+      );
+      window.location.href = "/login";
       return;
     }
 
     try {
-      const response = await axios.get(`http://localhost:5000/api/patients/${patientId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(
+        `http://localhost:5000/api/patients/${patientId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const patientData = response.data;
 
@@ -114,16 +123,15 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
 
       setSelectedPatient(patientData);
       setIsModalOpen(true);
-    } catch (error) {
-      console.error('Error fetching patient details:', error);
+    } catch (error: unknown) {
+      console.error("Error fetching patient details:", error);
 
-      if (error.response?.status === 401) {
-        alert('Session expired. Please log in again.');
-        window.location.href = '/login';
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        alert("Session expired. Please log in again.");
+        window.location.href = "/login";
       }
     }
   };
-
   const closeModal = () => {
     setSelectedPatient(null);
     setIsModalOpen(false);
@@ -138,7 +146,9 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
     }
   };
 
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleFormChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
@@ -148,63 +158,70 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
     if (!formData || !selectedPatient) return;
 
     try {
-      setSaving(true);  // Set saving to true when saving data
+      setSaving(true); // Set saving to true when saving data
       const token = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('authToken='))
-        ?.split('=')[1];
-
+        .split("; ")
+        .find((row) => row.startsWith("authToken="))
+        ?.split("=")[1];
+        console.log(formData);
       await axios.put(
         `http://localhost:5000/api/patients/${selectedPatient._id}`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert('Patient updated successfully.');
+      alert("Patient updated successfully.");
       closeModal();
       window.location.reload();
     } catch (error) {
-      console.error('Error updating patient:', error);
-      alert('Failed to update the patient. Please try again.');
+      console.error("Error updating patient:", error);
+      alert("Failed to update the patient. Please try again.");
     } finally {
-      setSaving(false);  // Reset saving state after completion
+      setSaving(false); // Reset saving state after completion
     }
   };
 
   const handleDeleteClick = async () => {
     if (!selectedPatient) return;
-    const confirmation = confirm('Are you sure you want to delete this patient?');
+    const confirmation = confirm(
+      "Are you sure you want to delete this patient?"
+    );
 
     if (!confirmation) return;
 
     try {
-      setDeleting(true);  // Set deleting to true when deleting data
+      setDeleting(true); // Set deleting to true when deleting data
       const token = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('authToken='))
-        ?.split('=')[1];
+        .split("; ")
+        .find((row) => row.startsWith("authToken="))
+        ?.split("=")[1];
 
-      await axios.delete(`http://localhost:5000/api/patients/${selectedPatient._id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      alert('Patient deleted successfully.');
+      await axios.delete(
+        `http://localhost:5000/api/patients/${selectedPatient._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      alert("Patient deleted successfully.");
       closeModal();
       window.location.reload();
     } catch (error) {
-      console.error('Error deleting patient:', error);
-      alert('Failed to delete the patient. Please try again.');
+      console.error("Error deleting patient:", error);
+      alert("Failed to delete the patient. Please try again.");
     } finally {
-      setDeleting(false);  // Reset deleting state after completion
+      setDeleting(false); // Reset deleting state after completion
     }
   };
 
   const navigateToAddPatient = () => {
-    router.push('/add-patient');
+    router.push("/add-patient");
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col items-center justify-center py-8 px-4">
       <div className="max-w-6xl w-full bg-white shadow-2xl rounded-lg p-6">
-        <h3 className="text-4xl font-semibold text-center text-blue-700 py-4">Patients Dashboard</h3>
+        <h3 className="text-4xl font-semibold text-center text-blue-700 py-4">
+          Patients Dashboard
+        </h3>
         <div className="flex justify-between mb-6">
           <input
             type="text"
@@ -231,7 +248,9 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
               onClick={() => handlePatientClick(patient._id)}
             >
               <div className="flex justify-between items-center mb-3">
-                <span className="text-xl font-semibold text-gray-800">{patient.name}</span>
+                <span className="text-xl font-semibold text-gray-800">
+                  {patient.name}
+                </span>
                 <span className="text-gray-500">
                   {patient.age ?? calculateAge(patient.dob)} years
                 </span>
@@ -252,135 +271,188 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
             >
               ✕
             </button>
-            <h4 className="text-3xl font-semibold text-center text-blue-700 mb-4">{isEditing ? "Edit Patient Details" : "Patient Profile"}</h4>
+            <h4 className="text-3xl font-semibold text-center text-blue-700 mb-4">
+              {isEditing ? "Edit Patient Details" : "Patient Profile"}
+            </h4>
             {!isEditing ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div>
-                <p><strong>Name:</strong> {selectedPatient.name}</p>
-                <p>
-                  <strong>Age:</strong> {selectedPatient.age ?? calculateAge(selectedPatient.dob) || 'Not provided'}
-                </p>
-                <p>
-                  <strong>Date of Birth:</strong> {formatDate(selectedPatient.dob)|| 'Not provided'}
-                </p>
-                <p><strong>Contact:</strong> {selectedPatient.contact}</p>
-                <p><strong>Gender:</strong> {selectedPatient.gender}</p>
-                <p><strong>Address:</strong> {selectedPatient.address}</p>
-                <p>
-                  <strong>Physical Examination:</strong> {selectedPatient.physicalExamination || 'No data available'}
-                </p>
-                <p>
-                  <strong>Laboratory:</strong> {selectedPatient.laboratory || 'No data available'}
-                </p>
-                <p><strong>Treatment:</strong> {selectedPatient.treatment || 'No data available'}</p>
+                <div>
+                  <p>
+                    <strong>Name:</strong> {selectedPatient.name}
+                  </p>
+                  <p>
+                    <strong>Age:</strong>{" "}
+                    {(selectedPatient.age ??
+                      calculateAge(selectedPatient.dob)) ||
+                      "Not provided"}
+                  </p>
+                  <p>
+                    <strong>Date of Birth:</strong>{" "}
+                    {formatDate(selectedPatient.dob) || "Not provided"}
+                  </p>
+                  <p>
+                    <strong>Contact:</strong> {selectedPatient.contact}
+                  </p>
+                  <p>
+                    <strong>Gender:</strong> {selectedPatient.gender}
+                  </p>
+                  <p>
+                    <strong>Address:</strong> {selectedPatient.address}
+                  </p>
+                  <p>
+                    <strong>Physical Examination:</strong>{" "}
+                    {selectedPatient.physicalExamination || "No data available"}
+                  </p>
+                  <p>
+                    <strong>Laboratory:</strong>{" "}
+                    {selectedPatient.laboratory || "No data available"}
+                  </p>
+                  <p>
+                    <strong>Diagnosis:</strong>{" "}
+                    {selectedPatient.currentDiagnosis || "No data available"}
+                  </p>
+                  <p>
+                    <strong>Treatment:</strong>{" "}
+                    {selectedPatient.treatment || "No data available"}
+                  </p>
+                </div>
               </div>
-            </div>
-            ):(
-              <form onSubmit={handleFormSubmit} className="grid grid-cols-1 gap-4">
+            ) : (
+              <form
+                onSubmit={handleFormSubmit}
+                className="grid grid-cols-1 gap-4"
+              >
                 <div className="max-h-[70vh] overflow-y-auto">
                   {/* Name Field */}
-                <div>
-                  <label className="block text-sm font-medium">Name</label>
-                  <input
-                    name="name"
-                    value={formData.name || ""}
-                    onChange={handleFormChange}
-                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                  />
-                </div>
-                
-                {/* Date of Birth Field */}
-                <div>
-                  <label className="block text-sm font-medium">Date of Birth</label>
-                  <input
-                    name="dob"
-                    type="date"
-                    value={formData.dob || ""}
-                    onChange={handleFormChange}
-                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium">Name</label>
+                    <input
+                      name="name"
+                      value={formData.name || ""}
+                      onChange={handleFormChange}
+                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                    />
+                  </div>
 
-                {/* Contact Field */}
-                <div>
-                  <label className="block text-sm font-medium">Contact</label>
-                  <input
-                    name="contact"
-                    value={formData.contact || ""}
-                    onChange={handleFormChange}
-                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                  />
-                </div>
+                  {/* Date of Birth Field */}
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Date of Birth
+                    </label>
+                    <input
+                      name="dob"
+                      type="date"
+                      value={formData.dob || ""}
+                      onChange={handleFormChange}
+                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                    />
+                  </div>
 
-                {/* Address Field */}
-                <div>
-                  <label className="block text-sm font-medium">Address</label>
-                  <textarea
-                    name="address"
-                    value={formData.address || ""}
-                    onChange={handleFormChange}
-                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                  />
-                </div>
+                  {/* Contact Field */}
+                  <div>
+                    <label className="block text-sm font-medium">Contact</label>
+                    <input
+                      name="contact"
+                      value={formData.contact || ""}
+                      onChange={handleFormChange}
+                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                    />
+                  </div>
 
-                {/* Gender Field */}
-                <div>
-                  <label className="block text-sm font-medium">Gender</label>
-                  <select
-                    name="gender"
-                    value={formData.gender || ""}
-                    onChange={handleFormChange}
-                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
-                </div>
+                  {/* Address Field */}
+                  <div>
+                    <label className="block text-sm font-medium">Address</label>
+                    <textarea
+                      name="address"
+                      value={formData.address || ""}
+                      onChange={handleFormChange}
+                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                    />
+                  </div>
 
-                {/* Medical History Field */}
-                <div>
-                  <label className="block text-sm font-medium">Medical History</label>
-                  <textarea
-                    name="medicalHistory"
-                    value={formData.medicalHistory || ""}
-                    onChange={handleFormChange}
-                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                  />
-                </div>
+                  {/* Gender Field */}
+                  <div>
+                    <label className="block text-sm font-medium">Gender</label>
+                    <select
+                      name="gender"
+                      value={formData.gender || ""}
+                      onChange={(e) =>
+                        handleFormChange(
+                          e as unknown as React.ChangeEvent<
+                            HTMLInputElement | HTMLTextAreaElement
+                          >
+                        )
+                      }
+                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                  </div>
 
-                {/* Treatment Field */}
-                <div>
-                  <label className="block text-sm font-medium">Treatment</label>
-                  <textarea
-                    name="treatment"
-                    value={formData.treatment || ""}
-                    onChange={handleFormChange}
-                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                  />
-                </div>
+                  {/* Medical History Field */}
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Medical History
+                    </label>
+                    <textarea
+                      name="medicalHistory"
+                      value={formData.medicalHistory || ""}
+                      onChange={handleFormChange}
+                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                    />
+                  </div>
 
-                {/* Physical Examination Field */}
-                <div>
-                  <label className="block text-sm font-medium">Physical Examination</label>
-                  <textarea
-                    name="physicalExamination"
-                    value={formData.physicalExamination || ""}
-                    onChange={handleFormChange}
-                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                  />
-                </div>
+                  {/* Current Diagnosis Field */}
+                  <div>
+                    <label className="block text-sm font-medium">Diagnosis</label>
+                    <input
+                      name="currentDiagnosis"
+                      value={formData.currentDiagnosis || ""}
+                      onChange={handleFormChange}
+                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                    />
+                  </div>
 
-                {/* Laboratory Field */}
-                <div>
-                  <label className="block text-sm font-medium">Laboratory Results</label>
-                  <textarea
-                    name="laboratory"
-                    value={formData.laboratory || ""}
-                    onChange={handleFormChange}
-                    className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                  />
-                </div>
+                  {/* Treatment Field */}
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Treatment
+                    </label>
+                    <textarea
+                      name="treatment"
+                      value={formData.treatment || ""}
+                      onChange={handleFormChange}
+                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                    />
+                  </div>
+
+                  {/* Physical Examination Field */}
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Physical Examination
+                    </label>
+                    <textarea
+                      name="physicalExamination"
+                      value={formData.physicalExamination || ""}
+                      onChange={handleFormChange}
+                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                    />
+                  </div>
+
+                  {/* Laboratory Field */}
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Laboratory Results
+                    </label>
+                    <textarea
+                      name="laboratory"
+                      value={formData.laboratory || ""}
+                      onChange={handleFormChange}
+                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                    />
+                  </div>
                 </div>
                 <button
                   type="submit"
@@ -392,24 +464,27 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
             )}
             {!isEditing && (
               <>
-              <div>
-              <h5 className="text-xl font-medium mt-4">Medical History</h5>
-              <p className="text-gray-500">{selectedPatient.medicalHistory || 'No data available'}</p>
-            </div>
-            <div className="flex justify-end items-center mt-6">
-                <button
-                  onClick={handleEditClick}
-                  className="text-yellow-600 hover:text-yellow-800 mr-4"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={handleDeleteClick}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  {deleting ? "Deleting..." : "Delete"}  {/* Use deleting state */}
-                </button>
-              </div>
+                <div>
+                  <h5 className="text-xl font-medium mt-4">Medical History</h5>
+                  <p className="text-gray-500">
+                    {selectedPatient.medicalHistory || "No data available"}
+                  </p>
+                </div>
+                <div className="flex justify-end items-center mt-6">
+                  <button
+                    onClick={handleEditClick}
+                    className="text-yellow-600 hover:text-yellow-800 mr-4"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleDeleteClick}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    {deleting ? "Deleting..." : "Delete"}{" "}
+                    {/* Use deleting state */}
+                  </button>
+                </div>
               </>
             )}
           </div>

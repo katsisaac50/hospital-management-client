@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import Calendar, {CalendarValue} from 'react-calendar';
+import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { useState } from 'react';
 import Image from 'next/image';
@@ -40,17 +40,15 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({ href, icon, title }) =>
 );
 
 const Dashboard: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | [Date, Date] | null>(new Date());
   const router = useRouter();
 
-  const handleDateChange = (value: CalendarValue) => {
-    // Ensure only the desired type is stored in the state
-    if (value instanceof Date || (Array.isArray(value) && value.every(v => v instanceof Date))) {
-      setSelectedDate(value);
-    } else {
-      setSelectedDate(null);
+  const handleDateChange = (value: Date | [Date, Date] | null) => {
+    if (value instanceof Date || Array.isArray(value)) {
+        setSelectedDate(value as Date | [Date, Date]); // Type assertion
     }
-  };
+};
+
 
   // Handle logout functionality
   const handleLogout = () => {

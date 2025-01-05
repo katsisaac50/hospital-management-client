@@ -8,6 +8,7 @@ const AddPatientForm = () => {
   const [gender, setGender] = useState('');
   const [contact, setContact] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [emergencyContact, setEmergencyContact] = useState('');
   const [address, setAddress] = useState('');
   const [medicalHistory, setMedicalHistory] = useState('');
@@ -45,6 +46,7 @@ const AddPatientForm = () => {
           gender,
           contact,
           email,
+          password,
           emergencyContact,
           address,
           medicalHistory,
@@ -70,6 +72,7 @@ const AddPatientForm = () => {
       setGender('');
       setContact('');
       setEmail('');
+      setPassword('');
       setEmergencyContact('');
       setAddress('');
       setMedicalHistory('');
@@ -156,6 +159,17 @@ const AddPatientForm = () => {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
+          className="w-full p-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-gray-700 font-medium mb-2">Password:</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
           className="w-full p-2 border border-gray-300 rounded-md"
         />
