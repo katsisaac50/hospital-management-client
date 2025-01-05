@@ -6,6 +6,7 @@ const InvoicePage = () => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -26,15 +27,23 @@ const InvoicePage = () => {
 
   const handleCreateInvoice = async (values) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/invoices', values);
-      console.log(response)
-      setInvoices([...invoices, response.data]);
+      const servicesArray = values.services
+        ? values.services.split(',').map((service) => ({ description: service.trim() }))
+        : [];
+  
+      const response = await axios.post('http://localhost:5000/api/invoices', {
+        ...values,
+        services: servicesArray,
+      });
+  
+      setInvoices([...invoices, response.data.data]); // Use the correct path to the created invoice
       setIsModalOpen(false);
       form.resetFields();
     } catch (error) {
       console.error('Error creating invoice:', error);
     }
   };
+  
 
   const columns = [
     { title: 'Invoice Number', dataIndex: 'invoiceNumber', key: 'invoiceNumber' },
@@ -55,7 +64,7 @@ const InvoicePage = () => {
       {loading ? (
         <Spin tip="Loading invoices..." />
       ) : (
-        <Table dataSource={invoices} columns={columns} rowKey="_id" />
+        <Table dataSource={invoices} columns={columns} rowKey={(record) => record._id || record.invoiceNumber} />
       )}
 
       <Modal
@@ -76,6 +85,9 @@ const InvoicePage = () => {
           </Form.Item>
           <Form.Item name="services" label="Services (comma-separated descriptions)">
             <Input />
+          </Form.Item>
+          <Form.Item name="paymentStatus" label="Payment Status" rules={[{ required: true, message: 'Please select payment status' }]}>
+          <Input />
           </Form.Item>
         </Form>
       </Modal>
