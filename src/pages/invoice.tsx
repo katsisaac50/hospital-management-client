@@ -64,6 +64,18 @@ const InvoicePage = () => {
     fetchInvoices();
   }, []);
 
+   // Fetch invoices
+   const fetchInvoices = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/invoices');
+      setInvoices(response.data.data);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Handle invoice creation
   const handleCreateInvoice = async (values) => {
     setCreating(true);
@@ -180,7 +192,12 @@ const InvoicePage = () => {
             label="Payment Status"
             rules={[{ required: true, message: 'Please enter payment status' }]}
           >
-            <Input />
+            <Select>
+    <Select.Option value="paid">Paid</Select.Option>
+    <Select.Option value="pending">Pending</Select.Option>
+    <Select.Option value="failed">Failed</Select.Option>
+    {/* Add other valid options here */}
+  </Select>
           </Form.Item>
         </Form>
       </Modal>
