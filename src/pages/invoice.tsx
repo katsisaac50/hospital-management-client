@@ -72,16 +72,21 @@ const InvoicePage = () => {
         const [description, cost] = service.split(':');
         return { description: description.trim(), cost: parseFloat(cost.trim()) };
       });
-
+  
       const totalAmount = servicesArray.reduce((sum, service) => sum + service.cost, 0);
-
+  
       const response = await axios.post('http://localhost:5000/api/invoices', {
         ...values,
         services: servicesArray,
         totalAmount,
       });
-
-      setInvoices([...invoices, response.data.data]);
+  
+      // Option 1: Re-fetch invoices from the server
+      await fetchInvoices(); // Re-fetch all invoices to include the new one
+  
+      // Option 2: Alternatively, append the new invoice without re-fetching
+      // setInvoices((prevInvoices) => [...prevInvoices, response.data.data]);
+  
       setIsModalOpen(false);
       form.resetFields();
     } catch (error) {
@@ -90,6 +95,7 @@ const InvoicePage = () => {
       setCreating(false);
     }
   };
+  
 
   const columns = [
     { title: 'Invoice Number', dataIndex: 'invoiceNumber', key: 'invoiceNumber' },
