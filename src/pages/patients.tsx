@@ -184,14 +184,11 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   const handleGeneratePDF = () => {
     if (!selectedPatient) return;
   
-    const doc = new jsPDF(
-      {
+    const doc = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: "a4", // standard paper size
-        margins: { top: 10, left: 10, right: 10 }, // Adjust as needed
-      }
-    );
+    });
   
     // Add title
     doc.setFontSize(20);
@@ -199,12 +196,13 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   
     // Add patient details
     doc.setFontSize(12);
-    doc.rect(10, 10, 190, 277);
+    doc.rect(10, 10, 190, 277); // Optional: Draw a border for debugging
+  
     doc.text(`Name: ${selectedPatient.name}`, 10, 40);
     doc.text(
-      `Age: ${(selectedPatient.age ?? calculateAge(selectedPatient.dob)) || "N/A"}`,
-      10,
-      50
+        `Age: ${(selectedPatient.age ?? calculateAge(selectedPatient.dob)) || "N/A"}`,
+        10,
+        50
     );
     doc.text(`Date of Birth: ${formatDate(selectedPatient.dob)}`, 10, 60);
     doc.text(`Contact: ${selectedPatient.contact}`, 10, 70);
@@ -214,11 +212,17 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
     doc.text(`Laboratory Results: ${selectedPatient.laboratory || "N/A"}`, 10, 110);
     doc.text(`Diagnosis: ${selectedPatient.currentDiagnosis || "N/A"}`, 10, 120);
     doc.text(`Treatment: ${selectedPatient.treatment || "N/A"}`, 10, 130);
-    doc.text(`Treatment: ${selectedPatient.medicalHistory || "N/A"}`, 10, 140);
+
+    // Handle medical history with text wrapping
+    const medicalHistory = `Medical History: ${selectedPatient.medicalHistory || "N/A"}`;
+    const pageWidth = 190; // Total width of the page (A4) minus margins
+    const textLines = doc.splitTextToSize(medicalHistory, pageWidth); // Split text to fit within the page width
+    doc.text(textLines, 10, 140); // Render the wrapped text
 
     // Save the PDF
     doc.save(`${selectedPatient.name}_Medical_Form.pdf`);
-  };
+};
+
 
   const handleDeleteClick = async () => {
     if (!selectedPatient) return;
