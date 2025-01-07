@@ -184,7 +184,14 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   const handleGeneratePDF = () => {
     if (!selectedPatient) return;
   
-    const doc = new jsPDF();
+    const doc = new jsPDF(
+      {
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4", // standard paper size
+        margins: { top: 10, left: 10, right: 10 }, // Adjust as needed
+      }
+    );
   
     // Add title
     doc.setFontSize(20);
@@ -192,6 +199,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   
     // Add patient details
     doc.setFontSize(12);
+    doc.rect(10, 10, 190, 277);
     doc.text(`Name: ${selectedPatient.name}`, 10, 40);
     doc.text(
       `Age: ${(selectedPatient.age ?? calculateAge(selectedPatient.dob)) || "N/A"}`,
@@ -206,7 +214,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
     doc.text(`Laboratory Results: ${selectedPatient.laboratory || "N/A"}`, 10, 110);
     doc.text(`Diagnosis: ${selectedPatient.currentDiagnosis || "N/A"}`, 10, 120);
     doc.text(`Treatment: ${selectedPatient.treatment || "N/A"}`, 10, 130);
-    doc.text(`Treatment: ${selectedPatient.medicalHistory || "N/A"}`, 15, 140);
+    doc.text(`Treatment: ${selectedPatient.medicalHistory || "N/A"}`, 10, 140);
 
     // Save the PDF
     doc.save(`${selectedPatient.name}_Medical_Form.pdf`);
