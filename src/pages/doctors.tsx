@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Table, Button, Modal, Form, Input, Select, Spin, Popconfirm, message } from "antd";
+import { Table, Button, Modal, Form, Input, Spin, Popconfirm, message } from "antd";
 import { ColumnsType } from "antd/es/table";
 
 interface Doctor {
@@ -19,42 +19,42 @@ const DoctorsPage: React.FC = () => {
   const [currentDoctor, setCurrentDoctor] = useState<Doctor | null>(null);
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    const fetchDoctors = async () => {
-      setLoading(true);
-      try {
-        const token = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("authToken="))
-          ?.split("=")[1];
+  const getAuthToken = () => {
+    return document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("authToken="))
+      ?.split("=")[1];
+  };
 
-        if (!token) {
-          alert("Session expired or you are not logged in. Redirecting to login...");
-          window.location.href = "/login";
-          return;
-        }
-
-        const response = await axios.get("http://localhost:5000/api/users?role=doctor", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setDoctors(response.data.data);
-      } catch (error) {
-        console.error("Error fetching doctors:", error);
-        message.error("Failed to fetch doctors.");
-      } finally {
-        setLoading(false);
+  const fetchDoctors = async () => {
+    setLoading(true);
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        alert("Session expired or you are not logged in. Redirecting to login...");
+        window.location.href = "/login";
+        return;
       }
-    };
 
+      const response = await axios.get("http://localhost:5000/api/users?role=doctor", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setDoctors(response.data.data);
+    } catch (error) {
+      console.error("Error fetching doctors:", error);
+      message.error("Failed to fetch doctors.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchDoctors();
   }, []);
 
   const handleAddOrEditDoctor = async (values: Omit<Doctor, "_id">) => {
-    const token = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("authToken="))
-      ?.split("=")[1];
-
+    const token = getAuthToken();
     if (!token) {
       alert("Session expired or you are not logged in. Redirecting to login...");
       window.location.href = "/login";
@@ -63,13 +63,11 @@ const DoctorsPage: React.FC = () => {
 
     try {
       if (isEditing && currentDoctor) {
-        // Update doctor
         await axios.put(`http://localhost:5000/api/users/${currentDoctor._id}`, values, {
           headers: { Authorization: `Bearer ${token}` },
         });
         message.success("Doctor updated successfully.");
       } else {
-        // Add doctor
         await axios.post("http://localhost:5000/api/users", { ...values, role: "doctor" }, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -86,11 +84,7 @@ const DoctorsPage: React.FC = () => {
   };
 
   const handleDeleteDoctor = async (id: string) => {
-    const token = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("authToken="))
-      ?.split("=")[1];
-
+    const token = getAuthToken();
     if (!token) {
       alert("Session expired or you are not logged in. Redirecting to login...");
       window.location.href = "/login";
@@ -125,7 +119,7 @@ const DoctorsPage: React.FC = () => {
               setIsEditing(true);
               setIsModalOpen(true);
               setCurrentDoctor(record);
-              form.setFieldsValue(record); // Populate form with selected doctor data
+              form.setFieldsValue(record);
             }}
           >
             Edit
@@ -154,7 +148,7 @@ const DoctorsPage: React.FC = () => {
         onClick={() => {
           setIsModalOpen(true);
           setIsEditing(false);
-          form.resetFields(); // Reset form for new doctor
+          form.resetFields();
         }}
       >
         Add Doctor
@@ -168,7 +162,7 @@ const DoctorsPage: React.FC = () => {
 
       <Modal
         title={isEditing ? "Edit Doctor" : "Add Doctor"}
-        visible={isModalOpen}
+        open={isModalOpen}
         onCancel={() => {
           setIsModalOpen(false);
           setCurrentDoctor(null);
@@ -206,7 +200,7 @@ const DoctorsPage: React.FC = () => {
             label="Phone"
             rules={[
               { required: true, message: "Please enter the phone number." },
-              { pattern: /^\d+$/, message: "Phone number must be numeric." },
+              { pattern: /^\d{10,15}$/, message: "Phone number must be 10-15 digits." },
             ]}
           >
             <Input />
@@ -218,4 +212,3 @@ const DoctorsPage: React.FC = () => {
 };
 
 export default DoctorsPage;
- 

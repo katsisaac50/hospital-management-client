@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import cookie from "cookie";
+import jsPDF from "jspdf";
 import { useRouter } from "next/router";
 
 export async function getServerSideProps(context: {
@@ -178,6 +179,37 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
     } finally {
       setSaving(false); // Reset saving state after completion
     }
+  };
+
+  const handleGeneratePDF = () => {
+    if (!selectedPatient) return;
+  
+    const doc = new jsPDF();
+  
+    // Add title
+    doc.setFontSize(20);
+    doc.text("Patient Medical Form", 10, 20);
+  
+    // Add patient details
+    doc.setFontSize(12);
+    doc.text(`Name: ${selectedPatient.name}`, 10, 40);
+    doc.text(
+      `Age: ${(selectedPatient.age ?? calculateAge(selectedPatient.dob)) || "N/A"}`,
+      10,
+      50
+    );
+    doc.text(`Date of Birth: ${formatDate(selectedPatient.dob)}`, 10, 60);
+    doc.text(`Contact: ${selectedPatient.contact}`, 10, 70);
+    doc.text(`Gender: ${selectedPatient.gender}`, 10, 80);
+    doc.text(`Address: ${selectedPatient.address}`, 10, 90);
+    doc.text(`Physical Examination: ${selectedPatient.physicalExamination || "N/A"}`, 10, 100);
+    doc.text(`Laboratory Results: ${selectedPatient.laboratory || "N/A"}`, 10, 110);
+    doc.text(`Diagnosis: ${selectedPatient.currentDiagnosis || "N/A"}`, 10, 120);
+    doc.text(`Treatment: ${selectedPatient.treatment || "N/A"}`, 10, 130);
+    doc.text(`Treatment: ${selectedPatient.medicalHistory || "N/A"}`, 15, 140);
+
+    // Save the PDF
+    doc.save(`${selectedPatient.name}_Medical_Form.pdf`);
   };
 
   const handleDeleteClick = async () => {
@@ -471,6 +503,12 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
                   </p>
                 </div>
                 <div className="flex justify-end items-center mt-6">
+                <button
+                  onClick={handleGeneratePDF}
+                  className="text-green-600 hover:text-green-800 mr-4"
+                >
+                  Generate PDF
+                </button>
                   <button
                     onClick={handleEditClick}
                     className="text-yellow-600 hover:text-yellow-800 mr-4"
