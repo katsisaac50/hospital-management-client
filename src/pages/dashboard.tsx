@@ -133,7 +133,7 @@ const Dashboard: React.FC = () => {
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">Upcoming Check-Up</h3>
             <Calendar
-              onChange={handleDateChange} 
+              onChange={(value) => handleDateChange(value as Date | [Date, Date] | null)} 
               value={selectedDate}
             />
             <p className="text-sm text-gray-600 mt-4">
@@ -178,7 +178,7 @@ const Dashboard: React.FC = () => {
         </section>
       </main>
     </div>
-  );
-};
+
+  );};
 
 export default Dashboard;

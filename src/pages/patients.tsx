@@ -196,7 +196,6 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   
     // Add patient details
     doc.setFontSize(12);
-    doc.rect(10, 10, 190, 277); // Optional: Draw a border for debugging
   
     doc.text(`Name: ${selectedPatient.name}`, 10, 40);
     doc.text(
