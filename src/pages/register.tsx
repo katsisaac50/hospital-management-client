@@ -9,14 +9,15 @@ const RegistrationPage = () => {
     password: '',
     role: '',
   });
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+
+  const [success, setSuccess] = useState<null | string>(null); // Explicitly define the type
+  const [error, setError] = useState<null | string>(null);
   const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
@@ -40,7 +41,7 @@ const RegistrationPage = () => {
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
         {success && <p className="text-green-500 text-sm mb-4">{success}</p>}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleRegister}>
           <div className="mb-4">
             <label htmlFor="name" className="block text-gray-700 font-medium mb-2">
               Full Name
