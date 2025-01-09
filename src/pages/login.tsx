@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import Link from 'next/link';
 
 const Login = () => {
   useEffect(() => {
@@ -33,6 +34,22 @@ const Login = () => {
 
       alert('Login successful!');
       window.location.href = '/dashboard'; // Redirect after successful login
+      // Optionally, you can also set a session cookie for the user
+      // This is useful for maintaining a session across multiple requests
+      // document.cookie = `sessionId=${response.data.sessionId}; path=/;`;
+
+      // if (data.success) {
+      //   if (data.user.role === 'admin') {
+      //     router.push('/admin/dashboard');
+      //   } else if (data.user.role === 'doctor') {
+      //     router.push('/doctor/dashboard');
+      //   } else if (data.user.role === 'patient') {
+      //     router.push('/patient/dashboard');
+      //   }
+      // }
+      
+
+
     } catch (err) {
       setError('Invalid username or password');
     }
@@ -94,10 +111,10 @@ const Login = () => {
           </button>
         </form>
         <p className="text-center text-sm text-gray-600 mt-4">
-          Don't have an account?{' '}
-          <a href="/register" className="text-blue-500 hover:underline">
+        Don&apos;t have an account?{' '}
+          <Link href="/register" className="text-blue-500 hover:underline">
             Sign up
-          </a>
+          </Link>
         </p>
       </div>
     </div>

@@ -51,7 +51,7 @@ const DoctorsPage: React.FC = () => {
 
   useEffect(() => {
     fetchDoctors();
-  }, []);
+  }, [fetchDoctors]);
 
   const handleAddOrEditDoctor = async (values: Omit<Doctor, "_id">) => {
     const token = getAuthToken();

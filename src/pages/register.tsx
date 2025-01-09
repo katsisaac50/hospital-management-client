@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
+import Link from 'next/link';
+
+
 
 const RegistrationPage = () => {
   const [formData, setFormData] = useState({
@@ -14,9 +17,11 @@ const RegistrationPage = () => {
   const [error, setError] = useState<null | string>(null);
   const router = useRouter();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
+  
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -24,6 +29,18 @@ const RegistrationPage = () => {
 
     try {
       const { data } = await axios.post('http://localhost:5000/api/auth/register', formData);
+      console.log(data);
+
+
+      // if (data.success) {
+      //   if (data.user.role === 'admin') {
+      //     router.push('/admin/dashboard');
+      //   } else if (data.user.role === 'doctor') {
+      //     router.push('/doctor/dashboard');
+      //   } else if (data.user.role === 'patient') {
+      //     router.push('/patient/dashboard');
+      //   }
+      // }
       setSuccess('Registration successful! Please log in.');
       setFormData({ name: '', email: '', password: '', role: '' });
       setTimeout(() => {
@@ -116,9 +133,9 @@ const RegistrationPage = () => {
 
         <p className="text-center text-gray-600 mt-4">
           Already have an account?{' '}
-          <a href="/login" className="text-blue-600 hover:underline">
+          <Link href="/login" className="text-blue-600 hover:underline">
             Log in
-          </a>
+          </Link>
         </p>
       </div>
     </div>

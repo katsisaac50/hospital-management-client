@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Table, Card, Button, Spin } from 'antd';
+import { Card, Button, Spin } from 'antd';
 
 // Define the structure of the statistics data
 interface Statistics {

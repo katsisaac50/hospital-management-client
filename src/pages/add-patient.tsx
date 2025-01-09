@@ -19,7 +19,7 @@ const AddPatientPage = () => {
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
   if (!isAuthenticated) {
     return (

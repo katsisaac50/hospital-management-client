@@ -115,11 +115,11 @@ const InvoicePage: React.FC = () => {
 
       const totalAmount = servicesArray.reduce((sum, service) => sum + service.cost, 0);
 
-      const response = await axios.post('http://localhost:5000/api/invoices', {
-        ...values,
-        services: servicesArray,
-        totalAmount,
-      });
+      // const response = await axios.post('http://localhost:5000/api/invoices', {
+      //   ...values,
+      //   services: servicesArray,
+      //   totalAmount,
+      // });
 
       // Option 1: Re-fetch invoices from the server
       await fetchInvoices(); // Re-fetch all invoices to include the new one
