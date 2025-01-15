@@ -23,8 +23,11 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "utils/canUseDom.js"  ],
   "exclude": [
     "node_modules"
-  ]
+  ],
+  "paths": {
+  "@/components/*": ["components/*"]
+}
 }

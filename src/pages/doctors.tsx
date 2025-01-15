@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { Table, Button, Modal, Form, Input, Spin, Popconfirm, message } from "antd";
 import { ColumnsType } from "antd/es/table";
@@ -26,12 +26,12 @@ const DoctorsPage: React.FC = () => {
       ?.split("=")[1];
   };
 
-  const fetchDoctors = async () => {
+  const fetchDoctors = useCallback(async () => {
     setLoading(true);
     try {
       const token = getAuthToken();
       if (!token) {
-        alert("Session expired or you are not logged in. Redirecting to login...");
+        message.error("Session expired. Redirecting to login...");
         window.location.href = "/login";
         return;
       }
@@ -47,7 +47,7 @@ const DoctorsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchDoctors();
@@ -56,7 +56,7 @@ const DoctorsPage: React.FC = () => {
   const handleAddOrEditDoctor = async (values: Omit<Doctor, "_id">) => {
     const token = getAuthToken();
     if (!token) {
-      alert("Session expired or you are not logged in. Redirecting to login...");
+      message.error("Session expired. Redirecting to login...");
       window.location.href = "/login";
       return;
     }
@@ -76,7 +76,7 @@ const DoctorsPage: React.FC = () => {
       setIsModalOpen(false);
       setCurrentDoctor(null);
       form.resetFields();
-      fetchDoctors(); // Refresh doctors list
+      fetchDoctors();
     } catch (error) {
       console.error("Error saving doctor:", error);
       message.error("Failed to save doctor.");
@@ -86,7 +86,7 @@ const DoctorsPage: React.FC = () => {
   const handleDeleteDoctor = async (id: string) => {
     const token = getAuthToken();
     if (!token) {
-      alert("Session expired or you are not logged in. Redirecting to login...");
+      message.error("Session expired. Redirecting to login...");
       window.location.href = "/login";
       return;
     }
@@ -96,7 +96,7 @@ const DoctorsPage: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       message.success("Doctor deleted successfully.");
-      fetchDoctors(); // Refresh doctors list
+      fetchDoctors();
     } catch (error) {
       console.error("Error deleting doctor:", error);
       message.error("Failed to delete doctor.");

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useRouter } from 'next/router';
 
 const AddPatientForm = () => {
   const [patientID, setPatientID] = useState('');
@@ -20,6 +21,8 @@ const AddPatientForm = () => {
   const [physicalExamination, setPhysicalExamination] = useState('');
   const [treatment, setTreatment] = useState('');
   const [laboratory, setLaboratory] = useState('');
+
+  const router = useRouter();
 
   const getTokenFromCookie = () => {
     const match = document.cookie.match(/(^| )authToken=([^;]+)/);
@@ -84,6 +87,8 @@ const AddPatientForm = () => {
       setPhysicalExamination('');
       setTreatment('');
       setLaboratory('');
+      router.push('/patients');
+      
     } catch (error) {
       console.error('Error adding patient:', error);
       alert('Failed to add patient.');

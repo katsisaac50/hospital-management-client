@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import AddPatientForm from './AddPatientForm';
 import { useRouter } from 'next/router';
 
@@ -6,8 +6,8 @@ const AddPatientPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
 
-  // Function to check if user is authenticated
-  const checkAuth = () => {
+   // Function to check if user is authenticated
+   const checkAuth = useCallback(() => {
     const token = document.cookie.match(/(^| )authToken=([^;]+)/);
     if (token) {
       setIsAuthenticated(true); // User is authenticated
@@ -15,7 +15,7 @@ const AddPatientPage = () => {
       setIsAuthenticated(false); // User is not authenticated
       router.push('/login'); // Redirect to login page
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     checkAuth();
