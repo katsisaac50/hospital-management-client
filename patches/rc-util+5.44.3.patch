@@ -1,0 +1,50 @@
+diff --git a/node_modules/rc-util/es/Dom/dynamicCSS.js b/node_modules/rc-util/es/Dom/dynamicCSS.js
+index 8ddec00..76e3323 100644
+--- a/node_modules/rc-util/es/Dom/dynamicCSS.js
++++ b/node_modules/rc-util/es/Dom/dynamicCSS.js
+@@ -1,6 +1,6 @@
+ import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+-import canUseDom from "./canUseDom";
+-import contains from "./contains";
++import canUseDom from "./../../../../utils/canUseDom.js";
++import contains from "./contains.js";
+ var APPEND_ORDER = 'data-rc-order';
+ var APPEND_PRIORITY = 'data-rc-priority';
+ var MARK_KEY = "rc-util-key";
+diff --git a/node_modules/rc-util/es/hooks/useLayoutEffect.js b/node_modules/rc-util/es/hooks/useLayoutEffect.js
+index d4bc1b4..af2985c 100644
+--- a/node_modules/rc-util/es/hooks/useLayoutEffect.js
++++ b/node_modules/rc-util/es/hooks/useLayoutEffect.js
+@@ -1,5 +1,5 @@
+ import * as React from 'react';
+-import canUseDom from "../Dom/canUseDom";
++import canUseDom from "./../../../../utils/canUseDom";
+ 
+ /**
+  * Wrap `React.useLayoutEffect` which will not throw warning message in test env
+diff --git a/node_modules/rc-util/es/ref.js b/node_modules/rc-util/es/ref.js
+index e505348..363f6bd 100644
+--- a/node_modules/rc-util/es/ref.js
++++ b/node_modules/rc-util/es/ref.js
+@@ -1,7 +1,7 @@
+ import _typeof from "@babel/runtime/helpers/esm/typeof";
+ import { isValidElement } from 'react';
+ import { ForwardRef, isMemo } from 'react-is';
+-import useMemo from "./hooks/useMemo";
++import useMemo from "./hooks/useMemo.js";
+ import isFragment from "./React/isFragment";
+ export var fillRef = function fillRef(ref, node) {
+   if (typeof ref === 'function') {
+diff --git a/node_modules/rc-util/es/utils/set.js b/node_modules/rc-util/es/utils/set.js
+index 4224e82..fa106cd 100644
+--- a/node_modules/rc-util/es/utils/set.js
++++ b/node_modules/rc-util/es/utils/set.js
+@@ -2,7 +2,7 @@ import _typeof from "@babel/runtime/helpers/esm/typeof";
+ import _objectSpread from "@babel/runtime/helpers/esm/objectSpread2";
+ import _toConsumableArray from "@babel/runtime/helpers/esm/toConsumableArray";
+ import _toArray from "@babel/runtime/helpers/esm/toArray";
+-import get from "./get";
++import get from "./get.js";
+ function internalSet(entity, paths, value, removeIfUndefined) {
+   if (!paths.length) {
+     return value;

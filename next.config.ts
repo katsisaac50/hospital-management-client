@@ -3,15 +3,22 @@ import type { Configuration } from 'webpack';
 import path from 'path';
 
 const nextConfig: NextConfig = {
-  webpack: (config: Configuration) => {
+  
+  experimental: {
+    esmExternals: true, // You can keep this experimental option if needed.
+  },
+  output: 'export', // Enables `next export`
+  assetPrefix: process.env.GITHUB_PAGES ? '/<repository-name>/' : '',
+  trailingSlash: true,
+  reactStrictMode: true,
+  webpack: (config) => {
     config.resolve = config.resolve || {};
+    config.resolve.extensions = config.resolve.extensions || [];
     config.resolve.alias = {
       ...config.resolve.alias,
-      'rc-util/es/Dom/canUseDom': path.resolve(
-        __dirname,
-        'node_modules/rc-util/es/Dom/canUseDom.js'
-      ),
+      // Add aliases here if needed for easier module resolution
     };
+    config.resolve.extensions.push('.js', '.jsx', '.json', '.ts', '.tsx', '.mjs', '.cjs');
     return config;
   },
 };

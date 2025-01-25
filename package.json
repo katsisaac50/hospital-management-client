@@ -2,38 +2,51 @@
   "name": "h-managementapp",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
+  "homepage": "https://<username>.github.io/<repository-name>",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "cross-env NEXT_SKIP_TYPE_CHECKING=true next build",
+    "build": "cross-env NEXT_SKIP_TYPE_CHECKING=true next build && next export",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.4.1",
+    "@mui/material": "^6.4.1",
+    "@next/swc-wasm-nodejs": "^15.1.5",
     "antd": "^5.23.0",
     "axios": "^1.7.9",
     "chart.js": "^4.4.7",
     "cookie": "^1.0.2",
     "jspdf": "^2.5.2",
     "next": "^15.1.4",
-    "rc-util": "^5.44.2",
+    "rc-picker": "^4.9.2",
+    "rc-util": "^5.44.3",
     "react": "^18.3.1",
     "react-calendar": "^5.1.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
-    "react-icons": "^5.4.0"
+    "react-icons": "^5.4.0",
+    "replace-in-file": "^8.3.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.26.4",
     "@eslint/eslintrc": "^3",
     "@types/next": "^8.0.7",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
     "autoprefixer": "^10.4.20",
     "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "15.1.2",
+    "next-transpile-modules": "^10.0.1",
+    "patch-package": "^8.0.0",
     "postcss": "^8.4.49",
+    "postinstall-postinstall": "^2.1.0",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5"
+    "typescript": "^5.7.3"
   }
 }

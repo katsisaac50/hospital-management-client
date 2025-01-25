@@ -1,7 +1,28 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { Table, Button, Modal, Form, Input, Spin, Popconfirm, message } from "antd";
-import { ColumnsType } from "antd/es/table";
+import DoctorForm from "./../components/DoctorForm";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  IconButton,
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 
 interface Doctor {
   _id: string;
@@ -11,39 +32,44 @@ interface Doctor {
   phone: string;
 }
 
+type DoctorFormValues = Omit<Doctor, "_id">;
+
+const API_BASE_URL = "http://localhost:5000/api/users";
+
 const DoctorsPage: React.FC = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [currentDoctor, setCurrentDoctor] = useState<Doctor | null>(null);
-  const [form] = Form.useForm();
+  const [formValues, setFormValues] = useState<DoctorFormValues>({
+    name: "",
+    email: "",
+    specialization: "",
+    phone: "",
+  });
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const getAuthToken = () => {
-    return document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("authToken="))
-      ?.split("=")[1];
+    return document.cookie.split("; ").find((row) => row.startsWith("authToken="))?.split("=")[1];
   };
 
   const fetchDoctors = useCallback(async () => {
     setLoading(true);
     try {
       const token = getAuthToken();
-      if (!token) {
-        message.error("Session expired. Redirecting to login...");
-        window.location.href = "/login";
-        return;
-      }
-
-      const response = await axios.get("http://localhost:5000/api/users?role=doctor", {
+      if (!token) throw new Error("Session expired");
+      const response = await axios.get(`${API_BASE_URL}?role=doctor`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       setDoctors(response.data.data);
     } catch (error) {
       console.error("Error fetching doctors:", error);
-      message.error("Failed to fetch doctors.");
+      setSnackbar({ open: true, message: "Failed to fetch doctors.", severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -53,161 +79,138 @@ const DoctorsPage: React.FC = () => {
     fetchDoctors();
   }, [fetchDoctors]);
 
-  const handleAddOrEditDoctor = async (values: Omit<Doctor, "_id">) => {
-    const token = getAuthToken();
-    if (!token) {
-      message.error("Session expired. Redirecting to login...");
-      window.location.href = "/login";
-      return;
-    }
-
+  const handleAddOrEditDoctor = async () => {
     try {
+      const token = getAuthToken();
+      if (!token) throw new Error("Session expired");
+
       if (isEditing && currentDoctor) {
-        await axios.put(`http://localhost:5000/api/users/${currentDoctor._id}`, values, {
+        await axios.put(`${API_BASE_URL}/${currentDoctor._id}`, formValues, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        message.success("Doctor updated successfully.");
+        setSnackbar({ open: true, message: "Doctor updated successfully.", severity: "success" });
       } else {
-        await axios.post("http://localhost:5000/api/users", { ...values, role: "doctor" }, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        message.success("Doctor added successfully.");
+        await axios.post(
+          API_BASE_URL,
+          { ...formValues, role: "doctor" },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setSnackbar({ open: true, message: "Doctor added successfully.", severity: "success" });
       }
-      setIsModalOpen(false);
-      setCurrentDoctor(null);
-      form.resetFields();
+
       fetchDoctors();
+      setIsDialogOpen(false);
+      setFormValues({ name: "", email: "", specialization: "", phone: "" });
     } catch (error) {
       console.error("Error saving doctor:", error);
-      message.error("Failed to save doctor.");
+      setSnackbar({ open: true, message: "Failed to save doctor.", severity: "error" });
     }
   };
 
   const handleDeleteDoctor = async (id: string) => {
-    const token = getAuthToken();
-    if (!token) {
-      message.error("Session expired. Redirecting to login...");
-      window.location.href = "/login";
-      return;
-    }
-
+    setLoading(true);
     try {
-      await axios.delete(`http://localhost:5000/api/users/${id}`, {
+      const token = getAuthToken();
+      if (!token) throw new Error("Session expired");
+
+      await axios.delete(`${API_BASE_URL}/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      message.success("Doctor deleted successfully.");
+
+      setSnackbar({ open: true, message: "Doctor deleted successfully.", severity: "success" });
       fetchDoctors();
     } catch (error) {
       console.error("Error deleting doctor:", error);
-      message.error("Failed to delete doctor.");
+      setSnackbar({ open: true, message: "Failed to delete doctor.", severity: "error" });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const columns: ColumnsType<Doctor> = [
-    { title: "Name", dataIndex: "name", key: "name" },
-    { title: "Email", dataIndex: "email", key: "email" },
-    { title: "Specialization", dataIndex: "specialization", key: "specialization" },
-    { title: "Phone", dataIndex: "phone", key: "phone" },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <>
-          <Button
-            type="link"
-            onClick={() => {
-              setIsEditing(true);
-              setIsModalOpen(true);
-              setCurrentDoctor(record);
-              form.setFieldsValue(record);
-            }}
-          >
-            Edit
-          </Button>
-          <Popconfirm
-            title="Are you sure you want to delete this doctor?"
-            onConfirm={() => handleDeleteDoctor(record._id)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button type="link" danger>
-              Delete
-            </Button>
-          </Popconfirm>
-        </>
-      ),
-    },
-  ];
+  const closeSnackbar = () => setSnackbar({ ...snackbar, open: false });
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Doctors Management</h2>
+    <Box padding={3}>
+      <Typography variant="h4" gutterBottom>
+        Doctors Management
+      </Typography>
       <Button
-        type="primary"
-        style={{ marginBottom: "20px" }}
+        variant="contained"
+        color="primary"
         onClick={() => {
-          setIsModalOpen(true);
+          setIsDialogOpen(true);
           setIsEditing(false);
-          form.resetFields();
+          setFormValues({ name: "", email: "", specialization: "", phone: "" });
         }}
+        sx={{ marginBottom: 2 }}
       >
         Add Doctor
       </Button>
 
       {loading ? (
-        <Spin tip="Loading doctors..." />
+        <CircularProgress />
       ) : (
-        <Table dataSource={doctors} columns={columns} rowKey={(record) => record._id} />
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Specialization</TableCell>
+                <TableCell>Phone</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {doctors.map((doctor) => (
+                <TableRow key={doctor._id}>
+                  <TableCell>{doctor.name}</TableCell>
+                  <TableCell>{doctor.email}</TableCell>
+                  <TableCell>{doctor.specialization}</TableCell>
+                  <TableCell>{doctor.phone}</TableCell>
+                  <TableCell>
+                    <IconButton
+                      onClick={() => {
+                        setIsEditing(true);
+                        setIsDialogOpen(true);
+                        setCurrentDoctor(doctor);
+                        setFormValues(doctor);
+                      }}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton color="error" onClick={() => handleDeleteDoctor(doctor._id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
 
-      <Modal
-        title={isEditing ? "Edit Doctor" : "Add Doctor"}
-        open={isModalOpen}
-        onCancel={() => {
-          setIsModalOpen(false);
-          setCurrentDoctor(null);
-          form.resetFields();
-        }}
-        onOk={() => form.submit()}
-      >
-        <Form form={form} onFinish={handleAddOrEditDoctor} layout="vertical">
-          <Form.Item
-            name="name"
-            label="Name"
-            rules={[{ required: true, message: "Please enter the doctor's name." }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: "Please enter the doctor's email." },
-              { type: "email", message: "Please enter a valid email." },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="specialization"
-            label="Specialization"
-            rules={[{ required: true, message: "Please enter the specialization." }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="phone"
-            label="Phone"
-            rules={[
-              { required: true, message: "Please enter the phone number." },
-              { pattern: /^\d{10,15}$/, message: "Phone number must be 10-15 digits." },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-        </Form>
-      </Modal>
-    </div>
+      <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
+        <DialogTitle>{isEditing ? "Edit Doctor" : "Add Doctor"}</DialogTitle>
+        <DialogContent>
+          <DoctorForm formValues={formValues} setFormValues={setFormValues} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" color="primary" onClick={handleAddOrEditDoctor}>
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={closeSnackbar}>
+        <Alert onClose={closeSnackbar} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 

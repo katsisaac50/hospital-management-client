@@ -1,6 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { Table, Button, Modal, Form, Input, Select, Spin } from 'antd';
+import {
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  CircularProgress,
+  SelectChangeEvent,
+} from '@mui/material';
 
 interface Patient {
   _id: string;
@@ -27,208 +46,217 @@ interface Invoice {
   paymentStatus: string;
 }
 
-interface FormValues {
-  invoiceNumber: string;
-  patient: string;
-  doctor: string;
-  services: string;
-  paymentStatus: string;
-}
-
 const InvoicePage: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [creating, setCreating] = useState<boolean>(false);
-  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
 
-  // Fetch patients and doctors for dropdowns
+  const [formValues, setFormValues] = useState<{
+    invoiceNumber: string;
+    patient: string;
+    doctor: string;
+    services: string;
+    paymentStatus: string;
+  }>({
+    invoiceNumber: '',
+    patient: '',
+    doctor: '',
+    services: '',
+    paymentStatus: '',
+  });
+
+  const getToken = useCallback((): string | undefined => {
+    return document.cookie.split('; ').find((row) => row.startsWith('authToken='))?.split('=')[1];
+  }, []);
+
+  const fetchData = useCallback(async () => {
+    const token = getToken();
+    if (!token) {
+      alert('Session expired. Redirecting to login...');
+      window.location.href = '/login';
+      return;
+    }
+
+    try {
+      const [patientRes, doctorRes] = await Promise.all([
+        axios.get('http://localhost:5000/api/patients', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get('http://localhost:5000/api/users?role=doctor', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+      setPatients(patientRes.data || []);
+      setDoctors(doctorRes.data.data || []);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      alert('Failed to fetch data. Please check your connection or try again.');
+    }
+  }, [getToken]);
+
   useEffect(() => {
-    const fetchData = async () => {
-      const token = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('authToken='))
-        ?.split('=')[1];
-
-      if (!token) {
-        alert('Session expired or you are not logged in. Redirecting to login...');
-        window.location.href = '/login';
-        return;
-      }
-
-      try {
-        const patientRes = await axios.get('http://localhost:5000/api/patients', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const doctorRes = await axios.get('http://localhost:5000/api/users?role=doctor');
-        setPatients(patientRes.data || []);
-        setDoctors(doctorRes.data.data || []);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setPatients([]);
-        setDoctors([]);
-      }
-    };
     fetchData();
+  }, [fetchData]);
+
+  const fetchInvoices = useCallback(async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/invoices');
+      setInvoices(response.data.data);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+      alert('Failed to fetch invoices.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Fetch invoices
   useEffect(() => {
-    const fetchInvoices = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/invoices');
-        setInvoices(response.data.data);
-      } catch (error) {
-        console.error('Error fetching invoices:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchInvoices();
-  }, []);
+  }, [fetchInvoices]);
 
-    // Fetch invoices
-    const fetchInvoices = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/invoices');
-        setInvoices(response.data.data);
-      } catch (error) {
-        console.error('Error fetching invoices:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleTextFieldChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = event.target;
+    setFormValues((prev) => ({ ...prev, [name]: value }));
+  };
 
-  // Handle invoice creation
-  const handleCreateInvoice = async (values: FormValues) => {
+  const handleSelectChange = (event: SelectChangeEvent<string>) => {
+    const { name, value } = event.target;
+    if (name) {
+      setFormValues((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleCreateInvoice = async () => {
     setCreating(true);
     try {
-      const servicesArray: Service[] = values.services.split(',').map((service) => {
-        const [description, cost] = service.split(':');
-        return { description: description.trim(), cost: parseFloat(cost.trim()) };
-      });
+      const servicesArray = formValues.services
+        .split(',')
+        .map((service) => {
+          const [description, cost] = service.split(':');
+          return { description: description.trim(), cost: parseFloat(cost.trim()) };
+        })
+        .filter((service) => service.description && !isNaN(service.cost));
 
       const totalAmount = servicesArray.reduce((sum, service) => sum + service.cost, 0);
 
       const response = await axios.post('http://localhost:5000/api/invoices', {
-        ...values,
+        ...formValues,
         services: servicesArray,
         totalAmount,
       });
 
-      console.log(response)
-
-      // Option 1: Re-fetch invoices from the server
-      await fetchInvoices(); // Re-fetch all invoices to include the new one
-
-      // Option 2: Alternatively, append the new invoice without re-fetching
-      // setInvoices((prevInvoices) => [...prevInvoices, response.data.data]);
-
-      setIsModalOpen(false);
-      form.resetFields();
+      setInvoices((prev) => [...prev, response.data.data]);
+      setIsDialogOpen(false);
+      setFormValues({ invoiceNumber: '', patient: '', doctor: '', services: '', paymentStatus: '' });
     } catch (error) {
       console.error('Error creating invoice:', error);
+      alert('Failed to create invoice. Please try again.');
     } finally {
       setCreating(false);
     }
   };
 
-  const columns = [
-    { title: 'Invoice Number', dataIndex: 'invoiceNumber', key: 'invoiceNumber' },
-    { title: 'Patient', dataIndex: ['patient', 'name'], key: 'patient' },
-    { title: 'Doctor', dataIndex: ['doctor', 'name'], key: 'doctor' },
-    { title: 'Total Amount', dataIndex: 'totalAmount', key: 'totalAmount', render: (amount: number) => `$${amount}` },
-    { title: 'Payment Status', dataIndex: 'paymentStatus', key: 'paymentStatus' },
-    { title: 'Actions', key: 'actions', render: () => <Button type="link">View Details</Button> },
-  ];
-
   return (
     <div style={{ padding: '20px' }}>
       <h2>Invoices</h2>
-      <Button type="primary" onClick={() => setIsModalOpen(true)} style={{ marginBottom: '20px' }}>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => setIsDialogOpen(true)}
+        style={{ marginBottom: '20px' }}
+      >
         Create Invoice
       </Button>
 
       {loading ? (
-        <Spin tip="Loading invoices..." />
+        <CircularProgress />
       ) : (
-        <Table dataSource={invoices} columns={columns} rowKey={(record: Invoice) => record._id || record.invoiceNumber} />
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Invoice Number</TableCell>
+                <TableCell>Patient</TableCell>
+                <TableCell>Doctor</TableCell>
+                <TableCell>Total Amount</TableCell>
+                <TableCell>Payment Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {invoices.map((invoice) => (
+                <TableRow key={invoice._id}>
+                  <TableCell>{invoice.invoiceNumber}</TableCell>
+                  <TableCell>{invoice.patient?.name}</TableCell>
+                  <TableCell>{invoice.doctor?.name}</TableCell>
+                  <TableCell>${invoice.totalAmount}</TableCell>
+                  <TableCell>{invoice.paymentStatus}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
 
-      <Modal
-        title="Create Invoice"
-        visible={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        confirmLoading={creating}
-        onOk={() => form.submit()}
-      >
-        <Form form={form} onFinish={handleCreateInvoice} layout="vertical">
-          <Form.Item
+      <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)} fullWidth>
+        <DialogTitle>Create Invoice</DialogTitle>
+        <DialogContent>
+          <TextField
             name="invoiceNumber"
             label="Invoice Number"
-            rules={[{ required: true, message: 'Please enter invoice number' }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="patient"
-            label="Select Patient"
-            rules={[{ required: true, message: 'Please select a patient' }]}
-          >
-            <Select placeholder="Select Patient">
-              {patients && patients.length > 0 ? (
-                patients.map((patient) => (
-                  <Select.Option key={patient._id} value={patient._id}>
-                    {patient.name}
-                  </Select.Option>
-                ))
-              ) : (
-                <Select.Option disabled>No patients available</Select.Option>
-              )}
+            fullWidth
+            margin="dense"
+            value={formValues.invoiceNumber}
+            onChange={handleTextFieldChange}
+          />
+          <FormControl fullWidth margin="dense">
+            <InputLabel>Select Patient</InputLabel>
+            <Select name="patient" value={formValues.patient} onChange={handleSelectChange}>
+              {patients.map((patient) => (
+                <MenuItem key={patient._id} value={patient._id}>
+                  {patient.name}
+                </MenuItem>
+              ))}
             </Select>
-          </Form.Item>
-          <Form.Item
-            name="doctor"
-            label="Select Doctor"
-            rules={[{ required: true, message: 'Please select a doctor' }]}
-          >
-            <Select placeholder="Select Doctor">
-              {doctors && doctors.length > 0 ? (
-                doctors.map((doctor) => (
-                  <Select.Option key={doctor._id} value={doctor._id}>
-                    {doctor.name}
-                  </Select.Option>
-                ))
-              ) : (
-                <Select.Option disabled>No doctors available</Select.Option>
-              )}
+          </FormControl>
+          <FormControl fullWidth margin="dense">
+            <InputLabel>Select Doctor</InputLabel>
+            <Select name="doctor" value={formValues.doctor} onChange={handleSelectChange}>
+              {doctors.map((doctor) => (
+                <MenuItem key={doctor._id} value={doctor._id}>
+                  {doctor.name}
+                </MenuItem>
+              ))}
             </Select>
-          </Form.Item>
-          <Form.Item
+          </FormControl>
+          <TextField
             name="services"
-            label="Services (comma-separated with costs, e.g., Consultation:50, Medication:20)"
-            rules={[{ required: true, message: 'Please provide services with costs' }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="paymentStatus"
-            label="Payment Status"
-            rules={[{ required: true, message: 'Please enter payment status' }]}
-          >
-            <Select>
-              <Select.Option value="paid">Paid</Select.Option>
-              <Select.Option value="pending">Pending</Select.Option>
-              <Select.Option value="failed">Failed</Select.Option>
+            label="Services (e.g., Consultation:50, Medication:20)"
+            fullWidth
+            margin="dense"
+            value={formValues.services}
+            onChange={handleTextFieldChange}
+          />
+          <FormControl fullWidth margin="dense">
+            <InputLabel>Payment Status</InputLabel>
+            <Select name="paymentStatus" value={formValues.paymentStatus} onChange={handleSelectChange}>
+              <MenuItem value="paid">Paid</MenuItem>
+              <MenuItem value="pending">Pending</MenuItem>
+              <MenuItem value="failed">Failed</MenuItem>
             </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsDialogOpen(false)} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleCreateInvoice} color="primary" variant="contained" disabled={creating}>
+            {creating ? <CircularProgress size={24} /> : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

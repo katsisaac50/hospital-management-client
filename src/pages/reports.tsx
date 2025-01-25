@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Card, Button, Spin } from 'antd';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  Button,
+  CircularProgress,
+  Box,
+} from '@mui/material';
 
 // Define the structure of the statistics data
 interface Statistics {
@@ -10,30 +18,30 @@ interface Statistics {
 }
 
 const ReportsPage: React.FC = () => {
-  const [statistics, setStatistics] = useState<Statistics | null>(null); // Use null initially to handle loading state
+  const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchStatistics = async () => {
+      const token = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('authToken='))
+        ?.split('=')[1];
+
+      if (!token) {
+        alert('Session expired or you are not logged in. Redirecting to login...');
+        window.location.href = '/login';
+        return;
+      }
+
       try {
-        const token = document.cookie
-          .split('; ')
-          .find((row) => row.startsWith('authToken='))
-          ?.split('=')[1];
-
-        if (!token) {
-          alert('Session expired or you are not logged in. Redirecting to login...');
-          window.location.href = '/login';
-          return;
-        }
-
         const response = await axios.get('http://localhost:5000/api/reports/statistics', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        
-        setStatistics(response.data.data); // Typing this as Statistics
+
+        setStatistics(response.data.data);
       } catch (error) {
         console.error('Error fetching statistics:', error);
       } finally {
@@ -45,27 +53,51 @@ const ReportsPage: React.FC = () => {
   }, []);
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>Hospital Reports</h2>
+    <Box padding={3}>
+      <Typography variant="h4" gutterBottom>
+        Hospital Reports
+      </Typography>
+
       {loading ? (
-        <Spin tip="Loading statistics..." />
+        <Box display="flex" justifyContent="center" alignItems="center" height="200px">
+          <CircularProgress />
+        </Box>
       ) : (
-        <div className="reports-section">
-          <Card title="Statistics" style={{ marginBottom: '20px' }}>
-            <p>Total Patients: {statistics?.totalPatients}</p>
-            <p>Total Doctors: {statistics?.totalDoctors}</p>
-            <p>Total Revenue: ${statistics?.totalRevenue}</p>
+        <Box>
+          <Card sx={{ marginBottom: 3 }}>
+            <CardHeader title="Statistics" />
+            <CardContent>
+              <Typography variant="body1" gutterBottom>
+                Total Patients: {statistics?.totalPatients}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                Total Doctors: {statistics?.totalDoctors}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                Total Revenue: ${statistics?.totalRevenue}
+              </Typography>
+            </CardContent>
           </Card>
 
-          <Button type="primary" href="/reports/doctor-reports">
-            Doctor Reports
-          </Button>
-          <Button type="default" href="/reports/patient-reports" style={{ marginLeft: '10px' }}>
-            Patient Reports
-          </Button>
-        </div>
+          <Box display="flex" gap={2}>
+            <Button
+              variant="contained"
+              color="primary"
+              href="/reports/doctor-reports"
+            >
+              Doctor Reports
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              href="/reports/patient-reports"
+            >
+              Patient Reports
+            </Button>
+          </Box>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 };
 
