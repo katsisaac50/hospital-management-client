@@ -7,9 +7,9 @@ const nextConfig: NextConfig = {
   experimental: {
     esmExternals: true, // You can keep this experimental option if needed.
   },
-  output: 'export', // Enables `next export`
   assetPrefix: process.env.GITHUB_PAGES ? '/<repository-name>/' : '',
   trailingSlash: true,
+  images: { unoptimized: true },
   reactStrictMode: true,
   webpack: (config) => {
     config.resolve = config.resolve || {};
