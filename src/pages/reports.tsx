@@ -17,6 +17,8 @@ interface Statistics {
   totalRevenue: number;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const ReportsPage: React.FC = () => {
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -35,7 +37,7 @@ const ReportsPage: React.FC = () => {
       }
 
       try {
-        const response = await axios.get('http://localhost:5000/api/reports/statistics', {
+        const response = await axios.get(`${API_URL}/api/reports/statistics`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
