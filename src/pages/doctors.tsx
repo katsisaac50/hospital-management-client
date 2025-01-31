@@ -91,7 +91,7 @@ const DoctorsPage: React.FC = () => {
         setSnackbar({ open: true, message: "Doctor updated successfully.", severity: "success" });
       } else {
         await axios.post(
-          API_BASE_URL,
+          `${API_BASE_URL}/api/users`,
           { ...formValues, role: "doctor" },
           {
             headers: { Authorization: `Bearer ${token}` },
