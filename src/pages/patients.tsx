@@ -110,7 +110,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
 
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/patients/${patientId}`,
+        `${API_URL}/api/patients/${patientId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -168,7 +168,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
         ?.split("=")[1];
         console.log(formData);
       await axios.put(
-        `http://localhost:5000/api/patients/${selectedPatient._id}`,
+        `${API_URL}/api/patients/${selectedPatient._id}`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -241,7 +241,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
         ?.split("=")[1];
 
       await axios.delete(
-        `http://localhost:5000/api/patients/${selectedPatient._id}`,
+        `${API_URL}/api/patients/${selectedPatient._id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
