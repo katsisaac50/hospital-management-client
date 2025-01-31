@@ -34,7 +34,7 @@ interface Doctor {
 
 type DoctorFormValues = Omit<Doctor, "_id">;
 
-const API_BASE_URL = "http://localhost:5000/api/users";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const DoctorsPage: React.FC = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -63,7 +63,7 @@ const DoctorsPage: React.FC = () => {
     try {
       const token = getAuthToken();
       if (!token) throw new Error("Session expired");
-      const response = await axios.get(`${API_BASE_URL}?role=doctor`, {
+      const response = await axios.get(`${API_BASE_URL}/api/users?role=doctor`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDoctors(response.data.data);
