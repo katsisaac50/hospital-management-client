@@ -4,6 +4,8 @@ import cookie from "cookie";
 import jsPDF from "jspdf";
 import { useRouter } from "next/router";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export async function getServerSideProps(context: {
   req: { headers: { cookie?: string } };
 }) {
@@ -21,7 +23,7 @@ export async function getServerSideProps(context: {
   }
 
   try {
-    const response = await axios.get("http://localhost:5000/api/patients", {
+    const response = await axios.get(`${API_URL}/api/patients`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
