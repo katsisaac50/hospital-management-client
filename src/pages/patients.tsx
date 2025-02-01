@@ -1,6 +1,5 @@
 import axios from "axios";
 import { useState } from "react";
-import cookie from "cookie";
 import jsPDF from "jspdf";
 import { useRouter } from "next/router";
 
@@ -9,13 +8,12 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export async function getServerSideProps(context: {
   req: { headers: { cookie?: string } };
 }) {
-  const { req } = context;
-  
-  // Log the cookie header to check if it's being passed properly
-  console.log('Cookies:', req.headers.cookie);
 
-  const cookies = req.headers.cookie ? cookie.parse(req.headers.cookie || "") : {};
-  const token = cookies.authToken;
+  const getAuthToken = () => {
+    return document.cookie.split("; ").find((row) => row.startsWith("authToken="))?.split("=")[1];
+  };
+
+  const token = getAuthToken();
 
   if (!token) {
     return {
