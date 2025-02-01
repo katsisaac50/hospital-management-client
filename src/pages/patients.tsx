@@ -10,7 +10,7 @@ export async function getServerSideProps(context: {
   req: { headers: { cookie?: string } };
 }) {
   const { req } = context;
-  const cookies = cookie.parse(req.headers.cookie || "");
+  const cookies = req.headers.cookie ? cookie.parse(req.headers.cookie) : {};
   const token = cookies.authToken;
 
   if (!token) {
