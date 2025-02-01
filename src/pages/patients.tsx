@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useState } from "react";
-import cookie from "cookie";
+import * as cookie from "cookie";
 import jsPDF from "jspdf";
 import { useRouter } from "next/router";
 
