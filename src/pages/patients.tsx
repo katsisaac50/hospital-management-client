@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useState } from "react";
+import cookie from "cookie";
 import jsPDF from "jspdf";
 import { useRouter } from "next/router";
 
@@ -8,12 +9,14 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export async function getServerSideProps(context: {
   req: { headers: { cookie?: string } };
 }) {
-
-  const getAuthToken = () => {
-    return document.cookie.split("; ").find((row) => row.startsWith("authToken="))?.split("=")[1];
-  };
-
-  const token = getAuthToken();
+  const { req } = context;
+  
+  // Log the cookie header to check if it's being passed properly
+  console.log('Cookies:', req.headers.cookie);
+  const tokens = context.req.headers
+  console.log('Toks:', context.req.headers);
+  const cookies = req.headers.cookie ? cookie.parse(req.headers.cookie || "") : {};
+  const token = cookies.authToken;
 
   if (!token) {
     return {
@@ -30,8 +33,6 @@ export async function getServerSideProps(context: {
         Authorization: `Bearer ${token}`,
       },
     });
-
-    console.log('response:',response)
 
     return { props: { patients: response.data } };
   } catch (error) {
