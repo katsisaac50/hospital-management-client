@@ -13,8 +13,7 @@ export async function getServerSideProps(context: {
   
   // Log the cookie header to check if it's being passed properly
   console.log('Cookies:', req.headers.cookie);
-  const tokens = context.req.headers
-  console.log('Toks:', context.req.headers);
+
   const cookies = req.headers.cookie ? cookie.parse(req.headers.cookie || "") : {};
   const token = cookies.authToken;
 
