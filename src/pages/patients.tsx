@@ -33,6 +33,8 @@ export async function getServerSideProps(context: {
       },
     });
 
+    console.log('response:',response)
+
     return { props: { patients: response.data } };
   } catch (error) {
     console.error("Error fetching patients:", error);
