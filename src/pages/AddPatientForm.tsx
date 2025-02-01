@@ -24,6 +24,7 @@ const AddPatientForm = () => {
   const [laboratory, setLaboratory] = useState('');
 
   const router = useRouter();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const getTokenFromCookie = () => {
     const match = document.cookie.match(/(^| )authToken=([^;]+)/);
@@ -42,7 +43,7 @@ const AddPatientForm = () => {
 
     try {
       await axios.post(
-        'http://localhost:5000/api/patients',
+        `${API_URL}/api/patients`,
         {
           patientID,
           name,
