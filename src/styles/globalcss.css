@@ -35,6 +35,11 @@ nav ul li {
   margin-right: 1rem;
 }
 
+video {
+  -webkit-playsinline: true;
+  playsinline: true;
+}
+
 .react-calendar {
   background: #ffffff;
   border-radius: 1rem;
