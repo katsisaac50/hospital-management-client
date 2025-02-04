@@ -57,10 +57,11 @@ const Login = () => {
         className="video absolute inset-0 w-full h-full object-cover opacity-50"
         src="/assets/hospital.mp4"
         autoPlay
+        controls={false}
         loop
         muted
         poster="/assets/fallback.jpg"
-        controls
+        playsInline
         controlsList='nodownload noremoteplayback'
         disablePictureInPicture
       >
