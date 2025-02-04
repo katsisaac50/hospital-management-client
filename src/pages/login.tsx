@@ -55,6 +55,7 @@ const Login = () => {
     <div className="relative min-h-screen flex items-center justify-center bg-gray-900">
       <video
         className="video absolute inset-0 w-full h-full object-cover opacity-50"
+        src="/assets/hospital.mp4"
         autoPlay
         loop
         muted
@@ -63,7 +64,7 @@ const Login = () => {
         controlsList='nodownload noremoteplayback'
         disablePictureInPicture
       >
-        <source src="/assets/hospital.mp4" type="video/mp4" />
+        {/* <source src="/assets/hospital.mp4" type="video/mp4" /> */}
         Your browser does not support the video tag.
       </video>
 
