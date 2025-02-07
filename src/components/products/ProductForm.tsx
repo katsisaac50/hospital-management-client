@@ -1,6 +1,7 @@
 import { useState, useContext } from 'react';
 import { ProductsContext } from '../../context/ProductsContext';
 import { addProduct } from '../../services/productsService';
+import { AxiosError } from "axios";
 
 const ProductForm = () => {
   const { setProducts } = useContext(ProductsContext);
@@ -12,7 +13,8 @@ const ProductForm = () => {
     const newProduct = await addProduct(form);
     setProducts((prev: any) => [...prev, newProduct]);
   } catch (error) {
-    console.error("Failed to add product:", error.response?.data || error.message);
+    const err = error as AxiosError;
+    console.error("Failed to add product:", err.response?.data || err.message);
     alert("Error adding product. Please check the input fields.");
   }
 };

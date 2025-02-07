@@ -1,10 +1,27 @@
 import { useContext } from 'react';
 import { ProductsContext } from '../../context/ProductsContext';
 
-const ProductsList = (props) => {
+// Define the expected structure of a product
+interface Product {
+  _id: string;
+  name: string;
+  category: string;
+  quantity: number;
+  price: number;
+  batchNumber?: string; // Optional in case some products don't have it
+}
 
-  const { products } = useContext(ProductsContext);
-  const productItems = props.products.length > 0 ? props.products : products
+// Define the type for props
+interface ProductsListProps {
+  products?: Product[]; // Optional because we fall back to context products
+}
+
+const ProductsList: React.FC<ProductsListProps> = ({ products }) => {
+
+  const { products: contextProducts } = useContext(ProductsContext);
+  
+    // Use provided products or fallback to context products
+    const productItems = products && products.length > 0 ? products : contextProducts;
 
   return (
     <div>

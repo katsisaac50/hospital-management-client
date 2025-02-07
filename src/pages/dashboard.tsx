@@ -69,7 +69,7 @@ const Dashboard: React.FC = () => {
         {/* Profile Icon */}
         <div className="mb-8">
           <Image
-            src="/hospital-logo.jpg"
+            src="/assets/bismillah-medical-center-logo.jpeg"
             alt="Hospital Logo"
             width={48}
             height={48}
