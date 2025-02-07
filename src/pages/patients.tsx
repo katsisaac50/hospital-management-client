@@ -2,6 +2,7 @@ import axios from "axios";
 import { useState } from "react";
 import * as cookie from "cookie";
 import jsPDF from "jspdf";
+import "jspdf-autotable";
 import { useRouter } from "next/router";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -189,44 +190,131 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
 
   const handleGeneratePDF = () => {
     if (!selectedPatient) return;
-  
+
     const doc = new jsPDF({
         orientation: "portrait",
         unit: "mm",
-        format: "a4", // standard paper size
+        format: "a4",
     });
-  
-    // Add title
-    doc.setFontSize(20);
-    doc.text("Patient Medical Form", 10, 20);
-  
-    // Add patient details
-    doc.setFontSize(12);
-  
-    doc.text(`Name: ${selectedPatient.name}`, 10, 40);
-    doc.text(
-        `Age: ${(selectedPatient.age ?? calculateAge(selectedPatient.dob)) || "N/A"}`,
-        10,
-        50
-    );
-    doc.text(`Date of Birth: ${formatDate(selectedPatient.dob)}`, 10, 60);
-    doc.text(`Contact: ${selectedPatient.contact}`, 10, 70);
-    doc.text(`Gender: ${selectedPatient.gender}`, 10, 80);
-    doc.text(`Address: ${selectedPatient.address}`, 10, 90);
-    doc.text(`Physical Examination: ${selectedPatient.physicalExamination || "N/A"}`, 10, 100);
-    doc.text(`Laboratory Results: ${selectedPatient.laboratory || "N/A"}`, 10, 110);
-    doc.text(`Diagnosis: ${selectedPatient.currentDiagnosis || "N/A"}`, 10, 120);
-    doc.text(`Treatment: ${selectedPatient.treatment || "N/A"}`, 10, 130);
 
-    // Handle medical history with text wrapping
+    // Function to add the header on each page
+    const addHeader = () => {
+        const imgData = "/assets/hospital-icon.png";
+        const logoWidth = 50; // Desired width of the logo
+        const logoHeight = 25; // Desired height of the logo
+        const pageWidth = doc.internal.pageSize.getWidth(); // Get page width
+
+        const logoX = (pageWidth - logoWidth) / 2; // Calculate X position to center the logo
+
+        doc.addImage(imgData, "PNG", logoX, 10, logoWidth, logoHeight); // Centered logo
+
+        // Title below the logo
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.text("Bismillah Medical Center", pageWidth / 2, 45, { align: "center" });
+
+        // Subtitle with additional contact details
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.text("HEALTHY COMMUNITIES, BRIGHTER FUTURES.", pageWidth / 2, 52, { align: "center" });
+        doc.text("Contact: 123-456-7890 | Email: info@bismillahmedical.com", pageWidth / 2, 57, { align: "center" });
+
+        // Horizontal line
+        doc.line(10, 60, 200, 60);
+    };
+
+    // Add the header to the first page
+    addHeader();
+
+    let currentY = 70; // Initial Y position for content
+
+    const addContent = (text, yIncrement) => {
+        const pageHeight = doc.internal.pageSize.getHeight();
+        if (currentY + yIncrement > pageHeight - 20) { // If content exceeds page height
+            doc.addPage();
+            addHeader();
+            currentY = 70; // Reset Y position
+        }
+        doc.text(text, 10, currentY);
+        currentY += yIncrement;
+    };
+
+    // Patient Details Section
+    addContent("Patient Information", 10);
+    doc.setFont("helvetica", "bold");
+    doc.line(10, currentY - 2, 200, currentY - 2); // Underline
+
+    addContent(`Name: ${selectedPatient.name}`, 10);
+    addContent(`Age: ${selectedPatient.age ?? calculateAge(selectedPatient.dob) || "N/A"}`, 10);
+    addContent(`Date of Birth: ${formatDate(selectedPatient.dob)}`, 10);
+    addContent(`Gender: ${selectedPatient.gender}`, 10);
+    addContent(`Contact: ${selectedPatient.contact}`, 10);
+    addContent(`Address: ${selectedPatient.address}`, 10);
+    addContent(`Emergency Contact: ${selectedPatient.emergencyContact || "N/A"}`, 10);
+
+    // Medical Information Section
+    addContent("Medical Information", 10);
+    doc.setFont("helvetica", "bold");
+    doc.line(10, currentY - 2, 200, currentY - 2); // Underline
+
+    addContent(`Physical Examination: ${selectedPatient.physicalExamination || "N/A"}`, 10);
+    addContent(`Diagnosis: ${selectedPatient.currentDiagnosis || "N/A"}`, 10);
+    addContent(`Treatment: ${selectedPatient.treatment || "N/A"}`, 10);
+
+    // Medical History (Wrapped Text)
     const medicalHistory = `Medical History: ${selectedPatient.medicalHistory || "N/A"}`;
-    const pageWidth = 190; // Total width of the page (A4) minus margins
-    const textLines = doc.splitTextToSize(medicalHistory, pageWidth); // Split text to fit within the page width
-    doc.text(textLines, 10, 140); // Render the wrapped text
+    const textLines = doc.splitTextToSize(medicalHistory, 180);
+    addContent(textLines, 10 * textLines.length); // Adjust yIncrement based on text length
+
+    // Laboratory Information Section
+    addContent("Laboratory Information", 10);
+    doc.setFont("helvetica", "bold");
+    doc.line(10, currentY - 2, 200, currentY - 2); // Underline
+
+    addContent(`Laboratory Results: ${selectedPatient.laboratory || "N/A"}`, 10);
+
+    // Table for Test Results or Additional Data
+    const tableData = [
+        ["Test Name", "Result", "Reference"],
+        ["Blood Pressure", selectedPatient.bloodPressure || "N/A", "120/80 mmHg"],
+        ["Heart Rate", selectedPatient.heartRate || "N/A", "60-100 bpm"],
+        ["Blood Sugar", selectedPatient.bloodSugar || "N/A", "70-140 mg/dL"],
+    ];
+
+    doc.autoTable({
+        startY: currentY + 10,
+        head: [tableData[0]],
+        body: tableData.slice(1),
+        theme: "grid",
+    });
+
+    currentY = doc.autoTable.previous.finalY + 10; // Update currentY position after table
+
+    // Medication Section
+    addContent("Medication", 10);
+    doc.setFont("helvetica", "bold");
+    doc.line(10, currentY - 2, 200, currentY - 2); // Underline
+
+    addContent(`Current Medications: ${selectedPatient.medications || "N/A"}`, 10);
+
+    // Allergies Section
+    addContent("Allergies", 10);
+    doc.setFont("helvetica", "bold");
+    doc.line(10, currentY - 2, 200, currentY - 2); // Underline
+
+    addContent(`Known Allergies: ${selectedPatient.allergies || "N/A"}`, 10);
+
+    // Follow-up Instructions Section
+    addContent("Follow-up Instructions", 10);
+    doc.setFont("helvetica", "bold");
+    doc.line(10, currentY - 2, 200, currentY - 2); // Underline
+
+    addContent(`Instructions: ${selectedPatient.followUpInstructions || "N/A"}`, 10);
 
     // Save the PDF
     doc.save(`${selectedPatient.name}_Medical_Form.pdf`);
 };
+
 
 
   const handleDeleteClick = async () => {
