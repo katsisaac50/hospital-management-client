@@ -4,6 +4,8 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { useState } from 'react';
 import Image from 'next/image';
+import ProductsList from '../components/products/ProductsList';
+import ProductForm from '../components/products/ProductForm';
 
 interface StatCardProps {
   title: string;
@@ -81,6 +83,7 @@ const Dashboard: React.FC = () => {
             <NavigationLink href="/patients" icon="people" title="View Patients" />
             <NavigationLink href="/doctors" icon="person" title="View Doctors" />
             <NavigationLink href="/appointments" icon="event" title="Appointments" />
+            <NavigationLink href="/pharmacy" icon="local_pharmacy" title="Pharmacy" />
             <NavigationLink href="/reports" icon="description" title="Reports" />
             <NavigationLink href="/settings" icon="settings" title="Settings" />
           </ul>
@@ -126,7 +129,7 @@ const Dashboard: React.FC = () => {
           <StatCard title="Lung Capacity" value="4.75 L" icon="air" color="text-green-600" />
           <StatCard title="Blood Cells" value="5 million/ml" icon="bloodtype" color="text-red-600" />
         </section>
-
+        
         {/* Calendar and Health Data */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
           {/* Calendar */}

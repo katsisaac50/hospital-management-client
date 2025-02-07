@@ -27,7 +27,7 @@ export async function getServerSideProps(context: {
   }
 
   try {
-    const response = await axios.get(`${API_URL}/api/patients`, {
+    const response = await axios.get(`${API_URL}/patients`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -114,7 +114,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
 
     try {
       const response = await axios.get(
-        `${API_URL}/api/patients/${patientId}`,
+        `${API_URL}/patients/${patientId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -172,7 +172,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
         ?.split("=")[1];
         console.log(formData);
       await axios.put(
-        `${API_URL}/api/patients/${selectedPatient._id}`,
+        `${API_URL}/patients/${selectedPatient._id}`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -245,7 +245,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
         ?.split("=")[1];
 
       await axios.delete(
-        `${API_URL}/api/patients/${selectedPatient._id}`,
+        `${API_URL}/patients/${selectedPatient._id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

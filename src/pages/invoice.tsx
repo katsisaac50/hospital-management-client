@@ -46,6 +46,8 @@ interface Invoice {
   paymentStatus: string;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const InvoicePage: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -82,10 +84,10 @@ const InvoicePage: React.FC = () => {
 
     try {
       const [patientRes, doctorRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/patients', {
+        axios.get(`${API_URL}/patients`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get('http://localhost:5000/api/users?role=doctor', {
+        axios.get(`${API_URL}/users?role=doctor`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -103,7 +105,7 @@ const InvoicePage: React.FC = () => {
 
   const fetchInvoices = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/invoices');
+      const response = await axios.get(`${API_URL}/invoices`);
       setInvoices(response.data.data);
     } catch (error) {
       console.error('Error fetching invoices:', error);
@@ -142,7 +144,7 @@ const InvoicePage: React.FC = () => {
 
       const totalAmount = servicesArray.reduce((sum, service) => sum + service.cost, 0);
 
-      const response = await axios.post('http://localhost:5000/api/invoices', {
+      const response = await axios.post(`${API_URL}/invoices`, {
         ...formValues,
         services: servicesArray,
         totalAmount,

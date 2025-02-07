@@ -37,7 +37,7 @@ const ReportsPage: React.FC = () => {
       }
 
       try {
-        const response = await axios.get(`${API_URL}/api/reports/statistics`, {
+        const response = await axios.get(`${API_URL}/reports/statistics`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

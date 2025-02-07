@@ -63,7 +63,7 @@ const DoctorsPage: React.FC = () => {
     try {
       const token = getAuthToken();
       if (!token) throw new Error("Session expired");
-      const response = await axios.get(`${API_BASE_URL}/api/users?role=doctor`, {
+      const response = await axios.get(`${API_BASE_URL}/users?role=doctor`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDoctors(response.data.data);
@@ -91,7 +91,7 @@ const DoctorsPage: React.FC = () => {
         setSnackbar({ open: true, message: "Doctor updated successfully.", severity: "success" });
       } else {
         await axios.post(
-          `${API_BASE_URL}/api/users`,
+          `${API_BASE_URL}/users`,
           { ...formValues, role: "doctor" },
           {
             headers: { Authorization: `Bearer ${token}` },

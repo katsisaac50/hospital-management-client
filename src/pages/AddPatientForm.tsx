@@ -43,7 +43,7 @@ const AddPatientForm = () => {
 
     try {
       await axios.post(
-        `${API_URL}/api/patients`,
+        `${API_URL}/patients`,
         {
           patientID,
           name,

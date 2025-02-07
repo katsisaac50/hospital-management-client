@@ -37,7 +37,7 @@ const RegistrationPage = () => {
     }
 
     try {
-      const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, formData);
+      const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, formData);
       console.log(data);
 
       setSuccess('Registration successful! Redirecting to login...');
