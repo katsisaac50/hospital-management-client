@@ -273,12 +273,12 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
     const textLines = doc.splitTextToSize(medicalHistory, 180);
     textLines.forEach(line => addContent(line, 8));
 
+     // ✅ Check space before adding the table
+     checkNewPage(50);
+     
     // 🧪 Laboratory Information
     addSectionHeader("Laboratory Information");
     addContent(`Laboratory Results: ${selectedPatient.laboratory || "N/A"}`, 10);
-
-    // ✅ Check space before adding the table
-    checkNewPage(50);
 
     // 🏥 Table Data
     const tableData = [
