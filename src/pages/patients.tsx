@@ -1,11 +1,30 @@
 import axios from "axios";
 import { useState } from "react";
 import * as cookie from "cookie";
-import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { useRouter } from "next/router";
+import generatePDF from "../components/generatePDF";
+import { calculateAge, formatDate } from '../lib/utils';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+interface Patient {
+  _id: string;
+  name: string;
+  dob?: string;
+  age?: number;
+  gender: string;
+  contact: string;
+  address: string;
+  medicalHistory: string;
+  currentDiagnosis: string;
+  treatment: string;
+  appointments: string[];
+  labResults: string[];
+  lastVisit: string;
+  physicalExamination: string;
+  laboratory: string;
+}
 
 export async function getServerSideProps(context: {
   req: { headers: { cookie?: string } };
@@ -50,45 +69,29 @@ export async function getServerSideProps(context: {
     return { props: { patients: [] } };
   }
 }
-interface Patient {
-  _id: string;
-  name: string;
-  dob?: string;
-  age?: number;
-  gender: string;
-  contact: string;
-  address: string;
-  medicalHistory: string;
-  currentDiagnosis: string;
-  treatment: string;
-  appointments: string[];
-  labResults: string[];
-  lastVisit: string;
-  physicalExamination: string;
-  laboratory: string;
-}
 
-const calculateAge = (dob?: string): number | null => {
-  if (!dob) return null;
-  const birthDate = new Date(dob);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDifference = today.getMonth() - birthDate.getMonth();
 
-  if (
-    monthDifference < 0 ||
-    (monthDifference === 0 && today.getDate() < birthDate.getDate())
-  ) {
-    age--;
-  }
-  return age;
-};
+// const calculateAge = (dob?: string): number | null => {
+//   if (!dob) return null;
+//   const birthDate = new Date(dob);
+//   const today = new Date();
+//   let age = today.getFullYear() - birthDate.getFullYear();
+//   const monthDifference = today.getMonth() - birthDate.getMonth();
 
-const formatDate = (dateString?: string): string => {
-  if (!dateString) return "Not provided";
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat("en-GB", { dateStyle: "long" }).format(date); // e.g., "24 December 2024"
-};
+//   if (
+//     monthDifference < 0 ||
+//     (monthDifference === 0 && today.getDate() < birthDate.getDate())
+//   ) {
+//     age--;
+//   }
+//   return age;
+// };
+
+// const formatDate = (dateString?: string): string => {
+//   if (!dateString) return "Not provided";
+//   const date = new Date(dateString);
+//   return new Intl.DateTimeFormat("en-GB", { dateStyle: "long" }).format(date); // e.g., "24 December 2024"
+// };
 
 const Patients = ({ patients }: { patients: Patient[] }) => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -187,133 +190,155 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
       setSaving(false); // Reset saving state after completion
     }
   };
- 
-  const handleGeneratePDF = () => { 
-    if (!selectedPatient) return;
 
-    const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-    });
-
-    // Constants
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    let currentY = 70; // Initial Y position for content
-
-    // Function to add the header
-    const addHeader = () => {
-        const imgData = "/assets/hospital-icon.png";
-        const logoWidth = 50;
-        const logoHeight = 25;
-        const logoX = (pageWidth - logoWidth) / 2;
-
-        doc.addImage(imgData, "PNG", logoX, 10, logoWidth, logoHeight);
-
-        // Title (Bold)
-        doc.setFont("helvetica", "bold").setFontSize(18);
-        doc.text("Bismillah Medical Center", pageWidth / 2, 45, { align: "center" });
-
-        // Subtitle (Normal Font)
-        doc.setFont("helvetica", "normal").setFontSize(12);
-        doc.text("HEALTHY COMMUNITIES, BRIGHTER FUTURES.", pageWidth / 2, 52, { align: "center" });
-        doc.text("Contact: 123-456-7890 | Email: info@bismillahmedical.com", pageWidth / 2, 57, { align: "center" });
-
-        doc.line(10, 60, 200, 60);
-    };
-
-    // Function to check if we need a new page
-    const checkNewPage = (neededSpace: number) => {
-        if (currentY + neededSpace > pageHeight - 20) {
-            doc.addPage();
-            addHeader();
-            currentY = 70;
-        }
-    };
-
-    // Function to add content (Normal Font)
-    const addContent = (text: string, yIncrement: number) => {
-        checkNewPage(yIncrement);
-        doc.setFont("helvetica", "normal").setFontSize(12);
-        doc.text(text, 10, currentY);
-        currentY += yIncrement;
-    };
-
-    // Function to add section headers (Bold Titles)
-    const addSectionHeader = (headerText: string) => {
-        checkNewPage(12);
-        doc.setFont("helvetica", "bold").setFontSize(14);
-        doc.text(headerText, 10, currentY);
-        doc.line(10, currentY + 2, 200, currentY + 2);
-        currentY += 10;
-    };
-
-    // Add header to the first page
-    addHeader();
-
-    // 🏥 Patient Information
-    addSectionHeader("Patient Information");
-    addContent(`Name: ${selectedPatient.name}`, 10);
-    addContent(`Age: ${(selectedPatient.age ?? calculateAge(selectedPatient.dob)) || "N/A"}`, 10);
-    addContent(`Date of Birth: ${formatDate(selectedPatient.dob)}`, 10);
-    addContent(`Gender: ${selectedPatient.gender}`, 10);
-    addContent(`Contact: ${selectedPatient.contact}`, 10);
-    addContent(`Address: ${selectedPatient.address}`, 10);
-    addContent(`Emergency Contact: ${selectedPatient.emergencyContact || "N/A"}`, 10);
-
-    // 🏥 Medical Information
-    addSectionHeader("Medical Information");
-    addContent(`Physical Examination: ${selectedPatient.physicalExamination || "N/A"}`, 10);
-    addContent(`Diagnosis: ${selectedPatient.currentDiagnosis || "N/A"}`, 10);
-    addContent(`Treatment: ${selectedPatient.treatment || "N/A"}`, 10);
-
-    // Wrapped Medical History
-    const medicalHistory = `Medical History: ${selectedPatient.medicalHistory || "N/A"}`;
-    const textLines = doc.splitTextToSize(medicalHistory, 180);
-    textLines.forEach(line => addContent(line, 8));
-
-     // ✅ Check space before adding the table
-     checkNewPage(50);
-     
-    // 🧪 Laboratory Information
-    addSectionHeader("Laboratory Information");
-    addContent(`Laboratory Results: ${selectedPatient.laboratory || "N/A"}`, 10);
-
-    // 🏥 Table Data
-    const tableData = [
-        ["Test Name", "Result", "Reference"],
-        ["Blood Pressure", selectedPatient.bloodPressure || "N/A", "120/80 mmHg"],
-        ["Heart Rate", selectedPatient.heartRate || "N/A", "60-100 bpm"],
-        ["Blood Sugar", selectedPatient.bloodSugar || "N/A", "70-140 mg/dL"],
-    ];
-
-    doc.autoTable({
-        startY: currentY + 10,
-        head: [tableData[0]],
-        body: tableData.slice(1),
-        theme: "grid",
-        margin: { top: 10 },
-    });
-
-    // Update currentY after table
-    currentY = doc.lastAutoTable.finalY + 10;
-
-    // 💊 Medication Section
-    addSectionHeader("Medication");
-    addContent(`Current Medications: ${selectedPatient.medications || "N/A"}`, 10);
-
-    // 🚨 Allergies
-    addSectionHeader("Allergies");
-    addContent(`Known Allergies: ${selectedPatient.allergies || "N/A"}`, 10);
-
-    // 📅 Follow-up Instructions
-    addSectionHeader("Follow-up Instructions");
-    addContent(`Instructions: ${selectedPatient.followUpInstructions || "N/A"}`, 10);
-
-    // ✅ Save the PDF
-    doc.save(`${selectedPatient.name}_Medical_Form.pdf`);
+  const handleGeneratePDF = (preview = false) => {
+    // const selectedPatient = { /* your patient data */ };
+    generatePDF(selectedPatient, preview);
 };
+
+ 
+//   const handleGeneratePDF = () => { 
+//     if (!selectedPatient) return;
+
+//     const doc = new jsPDF({
+//         orientation: "portrait",
+//         unit: "mm",
+//         format: "a4",
+//     });
+
+//     // Constants
+//     const pageWidth = doc.internal.pageSize.getWidth();
+//     const pageHeight = doc.internal.pageSize.getHeight();
+//     let currentY = 70; // Initial Y position for content
+
+//     // Function to add the header
+//     const addHeader = () => {
+//         const imgData = "/assets/hospital-icon.png";
+//         const logoWidth = 50;
+//         const logoHeight = 25;
+//         const logoX = (pageWidth - logoWidth) / 2;
+
+//         doc.addImage(imgData, "PNG", logoX, 10, logoWidth, logoHeight);
+
+//         // Title (Bold)
+//         doc.setFont("helvetica", "bold").setFontSize(18);
+//         doc.text("Bismillah Medical Center", pageWidth / 2, 45, { align: "center" });
+
+//         // Subtitle (Normal Font)
+//         doc.setFont("helvetica", "normal").setFontSize(12);
+//         doc.text("HEALTHY COMMUNITIES, BRIGHTER FUTURES.", pageWidth / 2, 52, { align: "center" });
+//         doc.text("Contact: 123-456-7890 | Email: info@bismillahmedical.com", pageWidth / 2, 57, { align: "center" });
+
+//         doc.line(10, 60, 200, 60);
+//     };
+
+//     // Function to check if we need a new page
+//     const checkNewPage = (neededSpace: number) => {
+//         if (currentY + neededSpace > pageHeight - 20) {
+//             doc.addPage();
+//             addHeader();
+//             currentY = 70;
+//         }
+//     };
+
+//     // Function to add content (Normal Font)
+//     const addContent = (text: string, yIncrement: number) => {
+//         checkNewPage(yIncrement);
+//         doc.setFont("helvetica", "normal").setFontSize(12);
+//         doc.text(text, 10, currentY);
+//         currentY += yIncrement;
+//     };
+
+//     // Function to add section headers (Bold Titles)
+//     const addSectionHeader = (headerText: string) => {
+//         checkNewPage(12);
+//         doc.setFont("helvetica", "bold").setFontSize(14);
+//         doc.text(headerText, 10, currentY);
+//         doc.line(10, currentY + 2, 200, currentY + 2);
+//         currentY += 10;
+//     };
+
+//     // Add header to the first page
+//     addHeader();
+
+//     // 🏥 Patient Information
+//     addSectionHeader("Patient Information");
+//     addContent(`Name: ${selectedPatient.name}`, 10);
+//     addContent(`Age: ${(selectedPatient.age ?? calculateAge(selectedPatient.dob)) || "N/A"}`, 10);
+//     addContent(`Date of Birth: ${formatDate(selectedPatient.dob)}`, 10);
+//     addContent(`Gender: ${selectedPatient.gender}`, 10);
+//     addContent(`Contact: ${selectedPatient.contact}`, 10);
+//     addContent(`Address: ${selectedPatient.address}`, 10);
+//     addContent(`Emergency Contact: ${selectedPatient.emergencyContact || "N/A"}`, 10);
+
+//     // 🏥 Medical Information
+//     addSectionHeader("Medical Information");
+//     addContent(`Physical Examination: ${selectedPatient.physicalExamination || "N/A"}`, 10);
+//     addContent(`Diagnosis: ${selectedPatient.currentDiagnosis || "N/A"}`, 10);
+//     addContent(`Treatment: ${selectedPatient.treatment || "N/A"}`, 10);
+
+//     // Wrapped Medical History
+//     const medicalHistory = `Medical History: ${selectedPatient.medicalHistory || "N/A"}`;
+//     const textLines = doc.splitTextToSize(medicalHistory, 180);
+//     textLines.forEach(line => addContent(line, 8));
+
+//     // Check if we need a new page before "Laboratory Information" + Table
+//     const estimatedTableHeight = 60; 
+//     checkNewPage(estimatedTableHeight + 15);
+
+//     // 🧪 Laboratory Information
+//     addSectionHeader("Laboratory Information");
+
+//     // Dynamically Generate Table Data
+//     const tableData = [
+//         ["Test Name", "Result", "Reference"],
+//         ...(selectedPatient.laboratoryResults?.map((test: { name: string; result: string; reference: string }) => [
+//             test.name, test.result, test.reference
+//         ]) || [
+//             ["No Test Available", "-", "-"] // Placeholder if no results exist
+//         ])
+//     ];
+
+//     // Generate the Table Immediately After "Laboratory Results"
+//     doc.autoTable({
+//         startY: currentY,
+//         head: [tableData[0]],
+//         body: tableData.slice(1),
+//         theme: "grid",
+//         margin: { top: 10 },
+//         columnStyles: {
+//             0: { cellWidth: 60 }, // Test Name column width
+//             1: { cellWidth: 40 }, // Result column width
+//             2: { cellWidth: 60 }, // Reference column width
+//         },
+//         didDrawPage: () => {
+//             if (currentY > pageHeight - 60) { // Check if content will overflow
+//                 doc.addPage();
+//                 addHeader();
+//                 currentY = 70;
+//             }
+//         }
+//     });
+
+//     // Update currentY after the table
+//     currentY = doc.lastAutoTable.finalY + 10;
+
+//     // 💊 Medication Section
+//     addSectionHeader("Medication");
+//     addContent(`Current Medications: ${selectedPatient.medications || "N/A"}`, 10);
+
+//     // 🚨 Allergies
+//     addSectionHeader("Allergies");
+//     addContent(`Known Allergies: ${selectedPatient.allergies || "N/A"}`, 10);
+
+//     // 📅 Follow-up Instructions
+//     addSectionHeader("Follow-up Instructions");
+//     addContent(`Instructions: ${selectedPatient.followUpInstructions || "N/A"}`, 10);
+
+//     // ✅ Save the PDF
+//     doc.save(`${selectedPatient.name}_Medical_Form.pdf`);
+// };
+
   
   const handleDeleteClick = async () => {
     if (!selectedPatient) return;
@@ -607,10 +632,16 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
                 </div>
                 <div className="flex justify-end items-center mt-6">
                 <button
-                  onClick={handleGeneratePDF}
+  onClick={() => handleGeneratePDF(true)}  // Passing `true` for preview
+  className="text-green-600 hover:text-green-800 mr-4"
+>
+  Generate PDF (Preview)
+</button>
+                <button
+                  onClick={() => handleGeneratePDF(false)}
                   className="text-green-600 hover:text-green-800 mr-4"
                 >
-                  Generate PDF
+                  Generate PDF (Download)
                 </button>
                   <button
                     onClick={handleEditClick}
