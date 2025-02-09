@@ -60,7 +60,6 @@ const Login = () => {
         poster="/assets/fallback.jpg"
         playsInline
       />
-
       <button
         className="absolute top-5 right-5 text-xl p-2 bg-gray-700 text-white rounded-full shadow-md hover:bg-gray-600 transition"
         onClick={toggleTheme} // Toggle the theme using the context's toggle function

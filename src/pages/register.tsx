@@ -1,6 +1,4 @@
-
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 import Link from 'next/link';
@@ -12,6 +10,7 @@ const RegistrationPage = () => {
     password: '',
     role: '',
   });
+  const [roles, setRoles] = useState<string[]>([]); // State to store roles
   const [success, setSuccess] = useState<null | string>(null);
   const [error, setError] = useState<null | string>(null);
   const [loading, setLoading] = useState(false);
@@ -19,9 +18,25 @@ const RegistrationPage = () => {
 
   const router = useRouter();
 
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/roles`);
+        console.log('Roles fetched:', data);  // Debugging log
+        setRoles(data.roles); // Assuming the response is an array of roles
+      } catch (err) {
+        setError('Failed to fetch roles');
+        console.error(err);  // Log the error to the console
+      }
+    };
+
+    fetchRoles();
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    console.log('Updated formData:', formData);  // Debugging log
   };
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -38,7 +53,7 @@ const RegistrationPage = () => {
 
     try {
       const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, formData);
-      console.log(data);
+      console.log('Registration success:', data);
 
       setSuccess('Registration successful! Redirecting to login...');
       setFormData({ name: '', email: '', password: '', role: '' });
@@ -48,16 +63,16 @@ const RegistrationPage = () => {
       }, 2000);
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-          const message = err.response?.data?.message || 'An error occurred during registration.';
-          setError(message);
+        const message = err.response?.data?.message || 'An error occurred during registration.';
+        setError(message);
       } else if (err instanceof Error) {
-          setError(err.message);
+        setError(err.message);
       } else {
-          setError('An unknown error occurred during registration.');
+        setError('An unknown error occurred during registration.');
       }
-  } finally {
+    } finally {
       setLoading(false);
-  }
+    }
   };
 
   return (
@@ -133,9 +148,15 @@ const RegistrationPage = () => {
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-200"
             >
               <option value="">Select a Role</option>
-              <option value="doctor">Doctor</option>
-              <option value="nurse">Nurse</option>
-              <option value="admin">Admin</option>
+              {roles.length > 0 ? (
+                roles.map((role, index) => (
+                  <option key={index} value={role}>
+                    {role.charAt(0).toUpperCase() + role.slice(1)} {/* Capitalize first letter */}
+                  </option>
+                ))
+              ) : (
+                <option value="">Loading roles...</option>
+              )}
             </select>
           </div>
 
