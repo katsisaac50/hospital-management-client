@@ -5,6 +5,7 @@ import axios from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppContext } from '../context/AppContext';
+import { useTheme } from '../context/ThemeContext';
 import { AiOutlineEye, AiOutlineEyeInvisible, AiOutlineMoon, AiOutlineSun } from 'react-icons/ai';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -17,7 +18,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [theme, setTheme] = useState('dark');
+  const { theme, toggleTheme } = useTheme(); // Use the theme context
 
   useEffect(() => {
     document.body.classList.add('login-page');
@@ -62,7 +63,7 @@ const Login = () => {
 
       <button
         className="absolute top-5 right-5 text-xl p-2 bg-gray-700 text-white rounded-full shadow-md hover:bg-gray-600 transition"
-        onClick={() => setTheme(theme === 'dark' ? 'glass' : 'dark')}
+        onClick={toggleTheme} // Toggle the theme using the context's toggle function
       >
         {theme === 'dark' ? <AiOutlineSun /> : <AiOutlineMoon />}
       </button>
