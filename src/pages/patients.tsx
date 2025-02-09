@@ -5,6 +5,7 @@ import "jspdf-autotable";
 import { useRouter } from "next/router";
 import generatePDF from "../components/generatePDF";
 import { calculateAge, formatDate } from '../lib/utils';
+import { useAppContext } from "../context/AppContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -101,6 +102,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   const [saving, setSaving] = useState(false); // State for save action
   const [deleting, setDeleting] = useState(false); // State for delete action
   const router = useRouter();
+  const { user } = useAppContext();
 
   const handlePatientClick = async (patientId: string) => {
     const token = document.cookie
@@ -116,6 +118,9 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
       return;
     }
 
+    if (user?.role === "labTechnician") {
+      router.push(`/laboratory/${patientId}`); // Redirect to lab page with patientId
+    }
     try {
       const response = await axios.get(
         `${API_URL}/patients/${patientId}`,
@@ -402,7 +407,9 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {patients.map((patient) => (
-            <div
+            <li key={patient._id}>
+            {user?.role === "labTechnician" ? (
+              <div
               key={patient._id}
               className="bg-gradient-to-br from-white to-gray-100 rounded-lg shadow-md p-5 hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
               onClick={() => handlePatientClick(patient._id)}
@@ -418,6 +425,26 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
               <p className="text-gray-700 mb-2">{patient.contact}</p>
               <p className="text-gray-500 text-sm">{patient.gender}</p>
             </div>
+            ) : (
+              <div
+              key={patient._id}
+              className="bg-gradient-to-br from-white to-gray-100 rounded-lg shadow-md p-5 hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+              onClick={() => handlePatientClick(patient._id)}
+            >
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-xl font-semibold text-gray-800">
+                  {patient.name}
+                </span>
+                <span className="text-gray-500">
+                  {patient.age ?? calculateAge(patient.dob)} years
+                </span>
+              </div>
+              <p className="text-gray-700 mb-2">{patient.contact}</p>
+              <p className="text-gray-500 text-sm">{patient.gender}</p>
+            </div>
+            )}
+          </li>
+            
           ))}
         </div>
       </div>

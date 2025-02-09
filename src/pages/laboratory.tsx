@@ -5,7 +5,9 @@ import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Select, MenuItem, FormControl, InputLabel, TextField, CircularProgress, Button, Card, CardContent, CardHeader, Typography } from "@mui/material";
-import { toast } from "react-toastify"; // Import toast
+import { toast } from "react-toastify";
+import { useRouter } from "next/router";
+import { useAppContext } from "../context/AppContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -28,10 +30,25 @@ interface TestResult {
   date: string;
 }
 
-const LaboratoryPage = ({ patientId }: { patientId: string | number }) => {
+const LaboratoryPage = () => {
+  const router = useRouter();
+  const { user } = useAppContext();
   const queryClient = useQueryClient();
   const [selectedTest, setSelectedTest] = useState<Test | null>(null);
+  const [patientId, setPatientId] = useState<string | null>(null);
 
+  // Ensure patientId is set when available
+  useEffect(() => {
+    if (router.query.patientId) {
+      setPatientId(router.query.patientId as string);
+    }
+  }, [router.query.patientId]);
+
+  if (!patientId || user?.role !== "labTechnician") {
+    return <p>Access Denied</p>;
+  }
+
+  // Fetch available tests
   const { data: availableTests = [], isLoading, error } = useQuery<Test[]>({
     queryKey: ["medicalTests"],
     queryFn: async () => {
@@ -40,25 +57,28 @@ const LaboratoryPage = ({ patientId }: { patientId: string | number }) => {
     },
   });
 
+  // Fetch test results for the patient
   const { data: testResults = [] } = useQuery<TestResult[]>({
     queryKey: ["testResults", patientId],
     queryFn: async () => {
       const { data } = await axios.get(`${API_URL}/medicalTestResults?patientId=${patientId}`);
       return data;
     },
+    enabled: !!patientId, // Only fetch if patientId is available
   });
 
+  // Save test result mutation
   const saveTestResultMutation = useMutation({
-    mutationFn: async (newTestResult: { patientId: string | number; testId: string; result: string }) => {
+    mutationFn: async (newTestResult: { patientId: string; testId: string; result: string }) => {
       const { data } = await axios.post(`${API_URL}/medicalTestResults`, newTestResult);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["testResults", patientId] as const);
-      toast.success("Test result saved successfully!"); // Show success toast
+      toast.success("Test result saved successfully!");
     },
-    onError: (error) => {
-      toast.error("Error saving test result."); // Show error toast
+    onError: () => {
+      toast.error("Error saving test result.");
     },
   });
 
@@ -66,14 +86,18 @@ const LaboratoryPage = ({ patientId }: { patientId: string | number }) => {
     resolver: zodResolver(schema),
   });
 
-  // Use useEffect to set testId when selectedTest changes
   useEffect(() => {
     if (selectedTest) {
-      setValue("testId", selectedTest._id); // Update the testId value in the form
+      setValue("testId", selectedTest._id);
     }
   }, [selectedTest, setValue]);
 
   const onSubmit = (data: { testId: string; result: string }) => {
+    if (!patientId) {
+      toast.error("Patient ID is missing.");
+      return;
+    }
+    console.log("Submitting test result with patientId:", patientId); // Debugging log
     saveTestResultMutation.mutate({ patientId, ...data });
     reset();
     setSelectedTest(null);
