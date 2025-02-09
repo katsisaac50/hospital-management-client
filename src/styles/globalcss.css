@@ -40,6 +40,20 @@ video {
   playsinline: true;
 }
 
+/* Dark theme */
+body.dark {
+  background-color: #121212;
+  color: white;
+}
+
+/* Glassmorphism theme */
+body.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  color: white;
+}
+
+
 .react-calendar {
   background: #ffffff;
   border-radius: 1rem;

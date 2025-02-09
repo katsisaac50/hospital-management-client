@@ -5,7 +5,7 @@ import axios from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppContext } from '../context/AppContext';
-import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
+import { AiOutlineEye, AiOutlineEyeInvisible, AiOutlineMoon, AiOutlineSun } from 'react-icons/ai';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -17,6 +17,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
     document.body.classList.add('login-page');
@@ -25,7 +26,7 @@ const Login = () => {
     };
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -48,7 +49,7 @@ const Login = () => {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-gray-900 text-white">
+    <div className={`relative min-h-screen flex items-center justify-center transition-all duration-500 ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-transparent text-gray-900'}`}>
       <video
         className="absolute inset-0 w-full h-full object-cover opacity-40"
         src="/assets/hospital.mp4"
@@ -59,7 +60,14 @@ const Login = () => {
         playsInline
       />
 
-      <div className="relative z-10 bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
+      <button
+        className="absolute top-5 right-5 text-xl p-2 bg-gray-700 text-white rounded-full shadow-md hover:bg-gray-600 transition"
+        onClick={() => setTheme(theme === 'dark' ? 'glass' : 'dark')}
+      >
+        {theme === 'dark' ? <AiOutlineSun /> : <AiOutlineMoon />}
+      </button>
+
+      <div className={`relative z-10 p-8 rounded-lg shadow-xl w-full max-w-md transition-all duration-500 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white/30 backdrop-blur-lg border border-gray-300'}`}>
         <h1 className="text-3xl font-bold text-center text-blue-400 mb-6">Welcome Back</h1>
 
         <form onSubmit={handleLogin} className="space-y-4">
