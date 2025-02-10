@@ -2,35 +2,82 @@ import { useState, useContext } from 'react';
 import { ProductsContext } from '../../context/ProductsContext';
 import { addProduct } from '../../services/productsService';
 import { AxiosError } from "axios";
+import { useTheme } from '../../context/ThemeContext'; // Import theme context
 
 const ProductForm = () => {
   const { setProducts } = useContext(ProductsContext);
+  const { theme } = useTheme(); // Get current theme
   const [form, setForm] = useState({ name: '', category: 'medicine', quantity: 0, price: 0 });
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  try {
-    const newProduct = await addProduct(form);
-    setProducts((prev: any) => [...prev, newProduct]);
-  } catch (error) {
-    const err = error as AxiosError;
-    console.error("Failed to add product:", err.response?.data || err.message);
-    alert("Error adding product. Please check the input fields.");
-  }
-};
-
+    e.preventDefault();
+    try {
+      const newProduct = await addProduct(form);
+      setProducts((prev: any) => [...prev, newProduct]);
+    } catch (error) {
+      const err = error as AxiosError;
+      console.error("Failed to add product:", err.response?.data || err.message);
+      alert("Error adding product. Please check the input fields.");
+    }
+  };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input type="text" placeholder="Name" onChange={(e) => setForm({ ...form, name: e.target.value })} />
-      <select onChange={(e) => setForm({ ...form, category: e.target.value })}>
-        <option value="medicine">Medicine</option>
-        <option value="Surgical">Surgical</option>
-        <option value="equipment">Equipment</option>
-      </select>
-      <input type="number" placeholder="Quantity" onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} />
-      <input type="number" placeholder="Price" onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
-      <button type="submit">Add Product</button>
+    <form
+      onSubmit={handleSubmit}
+      className={`p-4 rounded-lg shadow-lg ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}
+    >
+      <div className="mb-3">
+        <label htmlFor="name" className="block text-sm font-medium mb-1">Name</label>
+        <input
+          id="name"
+          type="text"
+          placeholder="Enter product name"
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          className={`w-full p-2 rounded-md border ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-black border-gray-300'}`}
+        />
+      </div>
+
+      <div className="mb-3">
+        <label htmlFor="category" className="block text-sm font-medium mb-1">Category</label>
+        <select
+          id="category"
+          onChange={(e) => setForm({ ...form, category: e.target.value })}
+          className={`w-full p-2 rounded-md border ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-black border-gray-300'}`}
+        >
+          <option value="medicine">Medicine</option>
+          <option value="surgical">Surgical</option>
+          <option value="equipment">Equipment</option>
+        </select>
+      </div>
+
+      <div className="mb-3">
+        <label htmlFor="quantity" className="block text-sm font-medium mb-1">Quantity</label>
+        <input
+          id="quantity"
+          type="number"
+          placeholder="Enter quantity"
+          onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })}
+          className={`w-full p-2 rounded-md border ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-black border-gray-300'}`}
+        />
+      </div>
+
+      <div className="mb-3">
+        <label htmlFor="price" className="block text-sm font-medium mb-1">Price</label>
+        <input
+          id="price"
+          type="number"
+          placeholder="Enter price"
+          onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+          className={`w-full p-2 rounded-md border ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-black border-gray-300'}`}
+        />
+      </div>
+
+      <button
+        type="submit"
+        className={`w-full py-2 rounded-md font-semibold transition ${theme === 'dark' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+      >
+        Add Product
+      </button>
     </form>
   );
 };

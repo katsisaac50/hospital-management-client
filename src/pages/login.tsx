@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext } from '../context/AppContext'; // Use AuthContext instead of AppContext
 import { useTheme } from '../context/ThemeContext';
 import { AiOutlineEye, AiOutlineEyeInvisible, AiOutlineMoon, AiOutlineSun } from 'react-icons/ai';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const Login = () => {
-  const { setUser } = useAppContext();
+  const { setUser } = useAppContext(); // Use the global AuthContext
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,25 +29,31 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
-
+    setError("");
+  
     if (!email || !password) {
-      setError('Please fill in all fields');
+      setError("Please fill in all fields");
       return;
     }
-
+  
     setLoading(true);
     try {
       const response = await axios.post(`${API_URL}/auth/login`, { email, password });
+  
       document.cookie = `authToken=${response.data.token}; path=/; secure; samesite=strict;`;
-      setUser(response.data.user);
-      router.push('/dashboard');
+  
+      console.log("Full User Data:", response.data); // Debugging log
+  
+      setUser(response.data); // Store full user data
+      localStorage.setItem("user", JSON.stringify(response.data)); // Persist all fields
+  
+      router.push("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid username or password');
+      setError(err.response?.data?.message || "Invalid username or password");
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   return (
     <div className={`relative min-h-screen flex items-center justify-center transition-all duration-500 ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-transparent text-gray-900'}`}>
@@ -62,7 +68,7 @@ const Login = () => {
       />
       <button
         className="absolute top-5 right-5 text-xl p-2 bg-gray-700 text-white rounded-full shadow-md hover:bg-gray-600 transition"
-        onClick={toggleTheme} // Toggle the theme using the context's toggle function
+        onClick={toggleTheme}
       >
         {theme === 'dark' ? <AiOutlineSun /> : <AiOutlineMoon />}
       </button>

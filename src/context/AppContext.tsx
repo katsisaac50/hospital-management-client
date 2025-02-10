@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { ProductsProvider } from "./ProductsContext";
 
 interface User {
@@ -14,13 +14,31 @@ interface AppContextProps {
 const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch (error) {
+      console.error("Error parsing user from localStorage:", error);
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      } else {
+        localStorage.removeItem("user");
+      }
+    } catch (error) {
+      console.error("Error saving user to localStorage:", error);
+    }
+  }, [user]);
 
   return (
     <AppContext.Provider value={{ user, setUser }}>
-      <ProductsProvider> {/* ✅ Wraps everything */}
-        {children}
-      </ProductsProvider>
+      <ProductsProvider>{children}</ProductsProvider>
     </AppContext.Provider>
   );
 };

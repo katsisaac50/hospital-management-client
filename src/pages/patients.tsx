@@ -81,50 +81,48 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   const router = useRouter();
   const { user } = useAppContext();
 
+  console.log(user)
   const handlePatientClick = async (patientId: string) => {
     const token = document.cookie
       .split("; ")
       .find((row) => row.startsWith("authToken="))
       ?.split("=")[1];
-
+  
     if (!token) {
-      alert(
-        "Session expired or you are not logged in. Redirecting to login..."
-      );
+      alert("Session expired or you are not logged in. Redirecting to login...");
       window.location.href = "/login";
       return;
     }
-
+  
+    // 🚨 Prevent modal from opening for lab technicians
     if (user?.role === "labTechnician") {
-      router.push(`/laboratory/${patientId}`); // Redirect to lab page with patientId
+      router.push(`/laboratory/${patientId}`);
+      return; // Exit function early
     }
+  
     try {
-      const response = await axios.get(
-        `${API_URL}/patients/${patientId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+      const response = await axios.get(`${API_URL}/patients/${patientId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
       const patientData = response.data;
-
+  
       if (!patientData.age) {
         patientData.age = calculateAge(patientData.dob);
       }
-
+  
       setSelectedPatient(patientData);
       setIsModalOpen(true);
     } catch (error: unknown) {
       console.error("Error fetching patient details:", error);
-
+  
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         alert("Session expired. Please log in again.");
         window.location.href = "/login";
       }
     }
-  };
+  };  
+  
   const closeModal = () => {
     setSelectedPatient(null);
     setIsModalOpen(false);
@@ -252,7 +250,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
                   {patient.name}
                 </span>
                 <span className="text-gray-500">
-                  {patient.age ?? calculateAge(patient.dob)} years
+                  {patient.age ?? calculateAge(patient.dob)} years1
                 </span>
               </div>
               <p className="text-gray-700 mb-2">{patient.contact}</p>
