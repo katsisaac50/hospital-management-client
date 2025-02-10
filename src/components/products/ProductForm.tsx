@@ -1,7 +1,7 @@
 import { useState, useContext } from 'react';
 import { ProductsContext } from '../../context/ProductsContext';
 import { addProduct } from '../../services/productsService';
-import { AxiosError } from "axios";
+import { AxiosError } from 'axios';
 import { useTheme } from '../../context/ThemeContext'; // Import theme context
 
 const ProductForm = () => {
@@ -16,8 +16,8 @@ const ProductForm = () => {
       setProducts((prev: any) => [...prev, newProduct]);
     } catch (error) {
       const err = error as AxiosError;
-      console.error("Failed to add product:", err.response?.data || err.message);
-      alert("Error adding product. Please check the input fields.");
+      console.error('Failed to add product:', err.response?.data || err.message);
+      alert('Error adding product. Please check the input fields.');
     }
   };
 
@@ -26,58 +26,60 @@ const ProductForm = () => {
       onSubmit={handleSubmit}
       className={`p-4 rounded-lg shadow-lg ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}
     >
-      <div className="mb-3">
-        <label htmlFor="name" className="block text-sm font-medium mb-1">Name</label>
-        <input
-          id="name"
-          type="text"
-          placeholder="Enter product name"
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className={`w-full p-2 rounded-md border ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-black border-gray-300'}`}
-        />
-      </div>
+      <div className="flex space-x-4 items-center">
+        <div className="flex-1">
+          <label htmlFor="name" className="block text-sm font-medium mb-1">Name</label>
+          <input
+            id="name"
+            type="text"
+            placeholder="Enter product name"
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className={`w-full p-2 rounded-md border ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-black border-gray-300'}`}
+          />
+        </div>
 
-      <div className="mb-3">
-        <label htmlFor="category" className="block text-sm font-medium mb-1">Category</label>
-        <select
-          id="category"
-          onChange={(e) => setForm({ ...form, category: e.target.value })}
-          className={`w-full p-2 rounded-md border ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-black border-gray-300'}`}
+        <div className="flex-1">
+          <label htmlFor="category" className="block text-sm font-medium mb-1">Category</label>
+          <select
+            id="category"
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
+            className={`w-full p-2 rounded-md border ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-black border-gray-300'}`}
+          >
+            <option value="medicine">Medicine</option>
+            <option value="surgical">Surgical</option>
+            <option value="equipment">Equipment</option>
+          </select>
+        </div>
+
+        <div className="flex-1">
+          <label htmlFor="quantity" className="block text-sm font-medium mb-1">Quantity</label>
+          <input
+            id="quantity"
+            type="number"
+            placeholder="Enter quantity"
+            onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })}
+            className={`w-full p-2 rounded-md border ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-black border-gray-300'}`}
+          />
+        </div>
+
+        <div className="flex-1">
+          <label htmlFor="price" className="block text-sm font-medium mb-1">Price</label>
+          <input
+            id="price"
+            type="number"
+            placeholder="Enter price"
+            onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+            className={`w-full p-2 rounded-md border ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-black border-gray-300'}`}
+          />
+        </div>
+
+        <button
+          type="submit"
+          className={`w-1/5 py-2 rounded-md font-semibold transition ${theme === 'dark' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
         >
-          <option value="medicine">Medicine</option>
-          <option value="surgical">Surgical</option>
-          <option value="equipment">Equipment</option>
-        </select>
+          Add Product
+        </button>
       </div>
-
-      <div className="mb-3">
-        <label htmlFor="quantity" className="block text-sm font-medium mb-1">Quantity</label>
-        <input
-          id="quantity"
-          type="number"
-          placeholder="Enter quantity"
-          onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })}
-          className={`w-full p-2 rounded-md border ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-black border-gray-300'}`}
-        />
-      </div>
-
-      <div className="mb-3">
-        <label htmlFor="price" className="block text-sm font-medium mb-1">Price</label>
-        <input
-          id="price"
-          type="number"
-          placeholder="Enter price"
-          onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-          className={`w-full p-2 rounded-md border ${theme === 'dark' ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-black border-gray-300'}`}
-        />
-      </div>
-
-      <button
-        type="submit"
-        className={`w-full py-2 rounded-md font-semibold transition ${theme === 'dark' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
-      >
-        Add Product
-      </button>
     </form>
   );
 };
