@@ -15,13 +15,17 @@ const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(() => {
-    try {
+    if (typeof window !== "undefined") {
+      try {
       const storedUser = localStorage.getItem("user");
       return storedUser ? JSON.parse(storedUser) : null;
     } catch (error) {
       console.error("Error parsing user from localStorage:", error);
-      return null;
+      
     }
+    }
+    return null;
+    
   });
 
   useEffect(() => {

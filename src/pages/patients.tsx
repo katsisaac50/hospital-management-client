@@ -27,17 +27,20 @@ interface Patient {
   laboratory: string;
 }
 
+
+
 export async function getServerSideProps(context: {
   req: { headers: { cookie?: string } };
 }) {
   const { req } = context;
   
+  
   // Log the cookie header to check if it's being passed properly
-  console.log('Cookies:', req.headers.cookie);
+  // console.log('Cookies:', req.headers.cookie);
 
   const cookies = req.headers.cookie ? cookie.parse(req.headers.cookie || "") : {};
   const token = cookies.authToken;
-
+  console.log("Token being sent:", token);
   if (!token) {
     return {
       redirect: {
@@ -53,6 +56,8 @@ export async function getServerSideProps(context: {
         Authorization: `Bearer ${token}`,
       },
     });
+
+    console.log(response)
 
     return { props: { patients: response.data } };
   } catch (error) {
@@ -78,10 +83,13 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   const [formData, setFormData] = useState<Partial<Patient>>({});
   const [saving, setSaving] = useState(false); // State for save action
   const [deleting, setDeleting] = useState(false); // State for delete action
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterGender, setFilterGender] = useState("");
   const router = useRouter();
   const { user } = useAppContext();
 
-  console.log(user)
+  // console.log(user);
+  
   const handlePatientClick = async (patientId: string) => {
     const token = document.cookie
       .split("; ")
@@ -121,8 +129,8 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
         window.location.href = "/login";
       }
     }
-  };  
-  
+  };
+
   const closeModal = () => {
     setSelectedPatient(null);
     setIsModalOpen(false);
@@ -154,7 +162,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
         .split("; ")
         .find((row) => row.startsWith("authToken="))
         ?.split("=")[1];
-        console.log(formData);
+      console.log(formData);
       await axios.put(
         `${API_URL}/patients/${selectedPatient._id}`,
         formData,
@@ -172,9 +180,8 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   };
 
   const handleGeneratePDF = (preview = false) => {
-    // const selectedPatient = { /* your patient data */ };
     generatePDF(selectedPatient, preview);
-};
+  };
 
   const handleDeleteClick = async () => {
     if (!selectedPatient) return;
@@ -212,6 +219,12 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
     router.push("/add-patient");
   };
 
+  const filteredPatients = patients.filter(patient => {
+    const matchesNameOrId = patient.name.toLowerCase().includes(searchQuery.toLowerCase()) || patient._id.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesGender = filterGender ? patient.gender === filterGender : true;
+    return matchesNameOrId && matchesGender;
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col items-center justify-center py-8 px-4">
       <div className="max-w-6xl w-full bg-white shadow-2xl rounded-lg p-6">
@@ -223,8 +236,14 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
             type="text"
             placeholder="Search by Name or ID"
             className="border rounded-lg px-4 py-2 w-1/3 shadow-sm focus:outline-blue-500"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <select className="border rounded-lg px-4 py-2 shadow-sm focus:outline-blue-500">
+          <select
+            className="border rounded-lg px-4 py-2 shadow-sm focus:outline-blue-500"
+            value={filterGender}
+            onChange={(e) => setFilterGender(e.target.value)}
+          >
             <option value="">Filter by Gender</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
@@ -237,286 +256,147 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {patients.map((patient) => (
+          {filteredPatients.map((patient) => (
             <li key={patient._id}>
-            {user?.role === "labTechnician" ? (
               <div
-              key={patient._id}
-              className="bg-gradient-to-br from-white to-gray-100 rounded-lg shadow-md p-5 hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-              onClick={() => handlePatientClick(patient._id)}
-            >
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-xl font-semibold text-gray-800">
-                  {patient.name}
-                </span>
-                <span className="text-gray-500">
-                  {patient.age ?? calculateAge(patient.dob)} years1
-                </span>
+                key={patient._id}
+                className="bg-gradient-to-br from-white to-gray-100 rounded-lg shadow-md p-5 hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                onClick={() => handlePatientClick(patient._id)}
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-xl font-semibold text-gray-800">
+                    {patient.name}
+                  </span>
+                  <span className="text-gray-500">
+                    {patient.age ?? calculateAge(patient.dob)} years
+                  </span>
+                </div>
+                <p className="text-gray-700 mb-2">{patient.contact}</p>
+                <p className="text-gray-500 text-sm">{patient.gender}</p>
               </div>
-              <p className="text-gray-700 mb-2">{patient.contact}</p>
-              <p className="text-gray-500 text-sm">{patient.gender}</p>
-            </div>
-            ) : (
-              <div
-              key={patient._id}
-              className="bg-gradient-to-br from-white to-gray-100 rounded-lg shadow-md p-5 hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-              onClick={() => handlePatientClick(patient._id)}
-            >
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-xl font-semibold text-gray-800">
-                  {patient.name}
-                </span>
-                <span className="text-gray-500">
-                  {patient.age ?? calculateAge(patient.dob)} years
-                </span>
-              </div>
-              <p className="text-gray-700 mb-2">{patient.contact}</p>
-              <p className="text-gray-500 text-sm">{patient.gender}</p>
-            </div>
-            )}
-          </li>
-            
+            </li>
           ))}
         </div>
       </div>
 
       {isModalOpen && selectedPatient && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-2xl w-11/12 max-w-4xl p-8 relative animate-fade-in">
-            <button
-              className="absolute top-4 right-4 text-gray-600 hover:text-gray-800"
-              onClick={closeModal}
-            >
-              ✕
-            </button>
-            <h4 className="text-3xl font-semibold text-center text-blue-700 mb-4">
-              {isEditing ? "Edit Patient Details" : "Patient Profile"}
-            </h4>
-            {!isEditing ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={closeModal}
+        >
+          <div
+            className="bg-white rounded-lg p-6 shadow-lg max-w-3xl w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between">
+              <h3 className="text-2xl font-semibold">{selectedPatient.name}</h3>
+              <button onClick={closeModal} className="text-gray-600 text-2xl">
+                &times;
+              </button>
+            </div>
+            <div className="mt-6 space-y-4">
+              {!isEditing ? (
+                <>
                   <p>
-                    <strong>Name:</strong> {selectedPatient.name}
-                  </p>
-                  <p>
-                    <strong>Age:</strong>{" "}
-                    {(selectedPatient.age ??
-                      calculateAge(selectedPatient.dob)) ||
-                      "Not provided"}
-                  </p>
-                  <p>
-                    <strong>Date of Birth:</strong>{" "}
-                    {formatDate(selectedPatient.dob) || "Not provided"}
-                  </p>
-                  <p>
-                    <strong>Contact:</strong> {selectedPatient.contact}
+                    <strong>Age:</strong> {selectedPatient.age}
                   </p>
                   <p>
                     <strong>Gender:</strong> {selectedPatient.gender}
                   </p>
                   <p>
-                    <strong>Address:</strong> {selectedPatient.address}
+                    <strong>Contact:</strong> {selectedPatient.contact}
                   </p>
-                  <p>
-                    <strong>Physical Examination:</strong>{" "}
-                    {selectedPatient.physicalExamination || "No data available"}
-                  </p>
-                  <p>
-                    <strong>Laboratory:</strong>{" "}
-                    {selectedPatient.laboratory || "No data available"}
-                  </p>
-                  <p>
-                    <strong>Diagnosis:</strong>{" "}
-                    {selectedPatient.currentDiagnosis || "No data available"}
-                  </p>
-                  <p>
-                    <strong>Treatment:</strong>{" "}
-                    {selectedPatient.treatment || "No data available"}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <form
-                onSubmit={handleFormSubmit}
-                className="grid grid-cols-1 gap-4"
-              >
-                <div className="max-h-[70vh] overflow-y-auto">
-                  {/* Name Field */}
-                  <div>
-                    <label className="block text-sm font-medium">Name</label>
-                    <input
-                      name="name"
-                      value={formData.name || ""}
-                      onChange={handleFormChange}
-                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                    />
-                  </div>
-
-                  {/* Date of Birth Field */}
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Date of Birth
-                    </label>
-                    <input
-                      name="dob"
-                      type="date"
-                      value={formData.dob || ""}
-                      onChange={handleFormChange}
-                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                    />
-                  </div>
-
-                  {/* Contact Field */}
-                  <div>
-                    <label className="block text-sm font-medium">Contact</label>
-                    <input
-                      name="contact"
-                      value={formData.contact || ""}
-                      onChange={handleFormChange}
-                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                    />
-                  </div>
-
-                  {/* Address Field */}
-                  <div>
-                    <label className="block text-sm font-medium">Address</label>
-                    <textarea
-                      name="address"
-                      value={formData.address || ""}
-                      onChange={handleFormChange}
-                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                    />
-                  </div>
-
-                  {/* Gender Field */}
-                  <div>
-                    <label className="block text-sm font-medium">Gender</label>
-                    <select
-                      name="gender"
-                      value={formData.gender || ""}
-                      onChange={(e) =>
-                        handleFormChange(
-                          e as unknown as React.ChangeEvent<
-                            HTMLInputElement | HTMLTextAreaElement
-                          >
-                        )
-                      }
-                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
+                  {/* Only show medical data for doctors or admins */}
+                  {user?.role !== "labTechnician" && (
+                    <>
+                      <p>
+                        <strong>Medical History:</strong> {selectedPatient.medicalHistory}
+                      </p>
+                      <p>
+                        <strong>Diagnosis:</strong> {selectedPatient.currentDiagnosis}
+                      </p>
+                    </>
+                  )}
+                  <div className="flex justify-end gap-4 mt-6">
+                    <button
+                      className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
+                      onClick={handleEditClick}
                     >
-                      <option value="">Select Gender</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                    </select>
+                      Edit
+                    </button>
+                    <button
+                      className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+                      onClick={() => handleGeneratePDF(false)}
+                    >
+                      Generate PDF
+                    </button>
+                    <button
+                      className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600"
+                      onClick={handleDeleteClick}
+                    >
+                      {deleting ? "Deleting..." : "Delete"}
+                    </button>
                   </div>
-
-                  {/* Medical History Field */}
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Medical History
+                </>
+              ) : (
+                <form onSubmit={handleFormSubmit}>
+                  <div className="space-y-4">
+                    <label className="block">
+                      <span className="text-gray-700">Name</span>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleFormChange}
+                        className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md"
+                        required
+                      />
                     </label>
-                    <textarea
-                      name="medicalHistory"
-                      value={formData.medicalHistory || ""}
-                      onChange={handleFormChange}
-                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                    />
-                  </div>
 
-                  {/* Current Diagnosis Field */}
-                  <div>
-                    <label className="block text-sm font-medium">Diagnosis</label>
-                    <input
-                      name="currentDiagnosis"
-                      value={formData.currentDiagnosis || ""}
-                      onChange={handleFormChange}
-                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                    />
-                  </div>
-
-                  {/* Treatment Field */}
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Treatment
+                    <label className="block">
+                      <span className="text-gray-700">Gender</span>
+                      <select
+                        name="gender"
+                        value={formData.gender}
+                        onChange={handleFormChange}
+                        className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md"
+                      >
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                      </select>
                     </label>
-                    <textarea
-                      name="treatment"
-                      value={formData.treatment || ""}
-                      onChange={handleFormChange}
-                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                    />
-                  </div>
 
-                  {/* Physical Examination Field */}
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Physical Examination
+                    <label className="block">
+                      <span className="text-gray-700">Contact</span>
+                      <input
+                        type="text"
+                        name="contact"
+                        value={formData.contact}
+                        onChange={handleFormChange}
+                        className="mt-2 block w-full px-4 py-2 border border-gray-300 rounded-md"
+                      />
                     </label>
-                    <textarea
-                      name="physicalExamination"
-                      value={formData.physicalExamination || ""}
-                      onChange={handleFormChange}
-                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                    />
+                    
+                    <div className="flex justify-end gap-4 mt-6">
+                      <button
+                        className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+                        type="submit"
+                        disabled={saving}
+                      >
+                        {saving ? "Saving..." : "Save Changes"}
+                      </button>
+                      <button
+                        className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600"
+                        type="button"
+                        onClick={closeModal}
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
-
-                  {/* Laboratory Field */}
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Laboratory Results
-                    </label>
-                    <textarea
-                      name="laboratory"
-                      value={formData.laboratory || ""}
-                      onChange={handleFormChange}
-                      className="w-full border rounded-lg px-4 py-2 shadow-sm"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 shadow-lg transition"
-                >
-                  {saving ? "Saving..." : "Save Changes"}
-                </button>
-              </form>
-            )}
-            {!isEditing && (
-              <>
-                <div>
-                  <h5 className="text-xl font-medium mt-4">Medical History</h5>
-                  <p className="text-gray-500">
-                    {selectedPatient.medicalHistory || "No data available"}
-                  </p>
-                </div>
-                <div className="flex justify-end items-center mt-6">
-                <button
-  onClick={() => handleGeneratePDF(true)}  // Passing `true` for preview
-  className="text-green-600 hover:text-green-800 mr-4"
->
-  Generate PDF (Preview)
-</button>
-                <button
-                  onClick={() => handleGeneratePDF(false)}
-                  className="text-green-600 hover:text-green-800 mr-4"
-                >
-                  Generate PDF (Download)
-                </button>
-                  <button
-                    onClick={handleEditClick}
-                    className="text-yellow-600 hover:text-yellow-800 mr-4"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={handleDeleteClick}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    {deleting ? "Deleting..." : "Delete"}{" "}
-                    {/* Use deleting state */}
-                  </button>
-                </div>
-              </>
-            )}
+                </form>
+              )}
+            </div>
           </div>
         </div>
       )}

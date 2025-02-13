@@ -4,7 +4,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { Select, MenuItem, FormControl, InputLabel, TextField, CircularProgress, Button, Card, CardContent, CardHeader, Typography } from "@mui/material";
+import {
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  TextField,
+  CircularProgress,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+} from "@mui/material";
 import { toast } from "react-toastify";
 import { useRouter } from "next/router";
 import { useAppContext } from "../context/AppContext";
@@ -36,19 +48,22 @@ const LaboratoryPage = () => {
   const queryClient = useQueryClient();
   const [selectedTest, setSelectedTest] = useState<Test | null>(null);
   const [patientId, setPatientId] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false); // Prevent hydration mismatch
 
-  // Ensure patientId is set when available
+  console.log(user);
+
   useEffect(() => {
-    if (router.query.patientId) {
-      setPatientId(router.query.patientId as string);
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    console.log("User data:", user);
+    if (user && user._id) {
+      setPatientId(user._id);
     }
-  }, [router.query.patientId]);
+  }, [user]); 
 
-  if (!patientId || user?.role !== "labTechnician") {
-    return <p>Access Denied</p>;
-  }
-
-  // Fetch available tests
+  // 🔴 DO NOT return early before hooks!
   const { data: availableTests = [], isLoading, error } = useQuery<Test[]>({
     queryKey: ["medicalTests"],
     queryFn: async () => {
@@ -57,20 +72,28 @@ const LaboratoryPage = () => {
     },
   });
 
-  // Fetch test results for the patient
   const { data: testResults = [] } = useQuery<TestResult[]>({
     queryKey: ["testResults", patientId],
     queryFn: async () => {
-      const { data } = await axios.get(`${API_URL}/medicalTestResults?patientId=${patientId}`);
+      const { data } = await axios.get(
+        `${API_URL}/medicalTestResults?patientId=${patientId}`
+      );
+      console.log(data)
       return data;
     },
-    enabled: !!patientId, // Only fetch if patientId is available
+    enabled: !!patientId, // ✅ Prevents fetching if patientId is null
   });
 
-  // Save test result mutation
   const saveTestResultMutation = useMutation({
-    mutationFn: async (newTestResult: { patientId: string; testId: string; result: string }) => {
-      const { data } = await axios.post(`${API_URL}/medicalTestResults`, newTestResult);
+    mutationFn: async (newTestResult: {
+      patientId: string;
+      testId: string;
+      result: string;
+    }) => {
+      const { data } = await axios.post(
+        `${API_URL}/medicalTestResults`,
+        newTestResult
+      );
       return data;
     },
     onSuccess: () => {
@@ -82,7 +105,13 @@ const LaboratoryPage = () => {
     },
   });
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+  } = useForm({
     resolver: zodResolver(schema),
   });
 
@@ -97,11 +126,15 @@ const LaboratoryPage = () => {
       toast.error("Patient ID is missing.");
       return;
     }
-    console.log("Submitting test result with patientId:", patientId); // Debugging log
     saveTestResultMutation.mutate({ patientId, ...data });
     reset();
     setSelectedTest(null);
   };
+
+  // ✅ Move conditional rendering AFTER all hooks
+  if (!isClient) return null;
+  if (!user) return <p>Loading user...</p>;
+  if (!patientId || user.role !== "labTechnician") return <p>Access Denied</p>;
 
   return (
     <div className="p-6 space-y-6">
@@ -116,7 +149,11 @@ const LaboratoryPage = () => {
               <InputLabel>Select a Test</InputLabel>
               <Select
                 value={selectedTest ? selectedTest._id : ""}
-                onChange={(e) => setSelectedTest(availableTests.find((t) => t._id === e.target.value) || null)}
+                onChange={(e) =>
+                  setSelectedTest(
+                    availableTests.find((t) => t._id === e.target.value) || null
+                  )
+                }
                 label="Select a Test"
               >
                 {availableTests.map((test) => (
@@ -130,9 +167,15 @@ const LaboratoryPage = () => {
 
             {selectedTest && (
               <div className="text-sm text-gray-700">
-                <p><strong>Reference:</strong> {selectedTest.referenceValue}</p>
-                <p><strong>Unit:</strong> {selectedTest.unit}</p>
-                <p><strong>Category:</strong> {selectedTest.category}</p>
+                <p>
+                  <strong>Reference:</strong> {selectedTest.referenceValue}
+                </p>
+                <p>
+                  <strong>Unit:</strong> {selectedTest.unit}
+                </p>
+                <p>
+                  <strong>Category:</strong> {selectedTest.category}
+                </p>
               </div>
             )}
 
@@ -159,8 +202,12 @@ const LaboratoryPage = () => {
           <ul className="space-y-2">
             {testResults.map((testResult, index) => (
               <li key={index} className="border p-2 rounded-md">
-                <p><strong>{testResult.test.testName}</strong></p>
-                <p>Result: {testResult.result} ({testResult.date})</p>
+                <p>
+                  <strong>{testResult.testId.testName}</strong>
+                </p>
+                <p>
+                  Result: {testResult.result} ({new Date(testResult.date).toLocaleDateString()})
+                </p>
               </li>
             ))}
           </ul>

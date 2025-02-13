@@ -11,30 +11,28 @@ import {
   Event,
   LocalPharmacy,
   Description,
+  Inventory,
+  Science,
   Settings,
   Logout,
 } from "@mui/icons-material";
-import { useAppContext } from "../context/AppContext"; // Use context instead of localStorage
-import ProductsList from "../components/products/ProductsList";
-import ProductForm from "../components/products/ProductForm";
+import { useAppContext } from "../context/AppContext";
+import { removeAuthToken } from "../../utils/auth";
 
 const Dashboard = () => {
-  const [selectedDate, setSelectedDate] = useState<Date | [Date, Date] | null>(
-    new Date()
-  );
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { user, setUser } = useAppContext(); // ✅ Get user from context
+  const { user, setUser } = useAppContext();
   const router = useRouter();
-  const [loading, setLoading] = useState(true); // ✅ Prevent premature redirect
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log(user)
     if (!user) {
       setTimeout(() => {
         if (!user) {
-          router.push("/login"); // Redirect only if user is still null
+          router.push("/login");
         }
-      }, 500); // Give AppContext time to load
+      }, 500);
     } else {
       setLoading(false);
     }
@@ -56,12 +54,9 @@ const Dashboard = () => {
     );
   }
 
-  const handleDateChange = (value: Date | [Date, Date] | null) => {
-    if (value) setSelectedDate(value);
-  };
-
   const handleLogout = () => {
     setUser(null);
+    removeAuthToken();
     localStorage.removeItem("user");
     router.push("/login");
   };
@@ -70,8 +65,8 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
       <aside
-        className={`bg-blue-600 text-white p-6 shadow-lg flex flex-col items-center w-${
-          sidebarCollapsed ? "16" : "20"
+        className={`bg-blue-600 text-white p-6 shadow-lg flex flex-col items-center transition-all duration-300 ${
+          sidebarCollapsed ? "w-16" : "w-64"
         }`}
       >
         <button
@@ -89,11 +84,13 @@ const Dashboard = () => {
           className="rounded-full shadow-md"
         />
 
-        <nav className="mt-6 space-y-6">
-          {[
+        <nav className="mt-6 space-y-6 flex flex-col items-center">
+          {[  
             ["/patients", <AccountCircle />, "Patients"],
             ["/appointments", <Event />, "Appointments"],
             ["/pharmacy", <LocalPharmacy />, "Pharmacy"],
+            // ["/inventory", <Inventory />, "Inventory"],
+            ["/laboratory", <Science />, "Laboratory"],
             ["/reports", <Description />, "Reports"],
             ["/settings", <Settings />, "Settings"],
           ].map(([href, icon, title]) => (
@@ -103,6 +100,7 @@ const Dashboard = () => {
               className="flex items-center justify-center w-14 h-14 rounded-lg hover:bg-blue-800"
             >
               {icon}
+              {!sidebarCollapsed && <span className="ml-3">{title}</span>}
             </Link>
           ))}
         </nav>
@@ -145,34 +143,20 @@ const Dashboard = () => {
             <h3 className="text-lg font-semibold text-gray-700 mb-4">
               Upcoming Check-Up
             </h3>
-            <Calendar onChange={handleDateChange} value={selectedDate} />
+            <Calendar onChange={setSelectedDate} value={selectedDate} />
           </div>
           <div className="bg-white p-6 rounded-lg shadow-lg col-span-2">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">
               Last Health Check
             </h3>
             <ul className="space-y-4">
-              {[
-                "Dental Health - Dec 10, 2023",
-                "BrainIQ Test - Oct 20, 2023",
-                "Kidney Check - Aug 15, 2023",
-              ].map((item, index) => (
+              {["Dental Health - Dec 10, 2023", "BrainIQ Test - Oct 20, 2023", "Kidney Check - Aug 15, 2023"].map((item, index) => (
                 <li key={index} className="flex justify-between">
                   <p className="text-sm font-medium text-gray-600">{item}</p>
                   <span className="text-xs text-gray-500">Completed</span>
                 </li>
               ))}
             </ul>
-          </div>
-        </section>
-
-        <section className="mt-8">
-          <h2 className="text-2xl font-semibold text-gray-800">
-            Medicine Inventory
-          </h2>
-          <div className="mt-6">
-            <ProductsList />
-            <ProductForm />
           </div>
         </section>
       </main>
