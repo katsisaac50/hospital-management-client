@@ -121,7 +121,7 @@ const LabTechnicianPatientPage = () => {
           ) : (
             patient && (
               <div className="border p-4 rounded-md">
-                <Typography variant="h6">{patient.name}</Typography>
+                <Typography variant="h6">{patient.ame}</Typography>
                 <Typography>Age: {patient.age}</Typography>
                 <Button
                   variant="outlined"
