@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useRouter } from "next/router";
 import {
@@ -8,173 +8,169 @@ import {
   CardContent,
   CardHeader,
   Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  CircularProgress,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
   TextField,
   Select,
   MenuItem,
-  CircularProgress,
 } from "@mui/material";
-import { toast } from "react-toastify";
-import { useAppContext } from "../../context/AppContext";
+import { DatePicker } from "@mui/x-date-pickers";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import dayjs from "dayjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const LabTechnicianPatientPage = () => {
   const router = useRouter();
   const { id } = router.query;
-  const { user } = useAppContext();
-  const queryClient = useQueryClient();
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTest, setSelectedTest] = useState("");
+  const [filteredTests, setFilteredTests] = useState([]);
 
-  const [selectedPatient, setSelectedPatient] = useState(null);
-  const [selectedTest, setSelectedTest] = useState(null);
-  const [openModal, setOpenModal] = useState(false);
-  const [result, setResult] = useState("");
+  const { data: testHistory = [], isLoading } = useQuery({
+    queryKey: ["testHistory", id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data } = await axios.get(`${API_URL}/medicalTestResults?patientId=${id}`);
+      return data;
+    },
+  });
 
-  useEffect(() => {
-    if (user && user.role !== "labTechnician") {
-      toast.error("Access denied");
-      router.push("/"); // Redirect unauthorized users
-    }
-  }, [user, router]);
-
-  // Fetch single patient instead of treating it as an array
-  const { data: patient, isLoading: loadingPatient, error: patientError } = useQuery({
+  const { data: patientData = {}, isLoading: isPatientLoading } = useQuery({
     queryKey: ["patient", id],
     queryFn: async () => {
-      if (!id) return null; // Prevent unnecessary fetches
-
-      try {
-        const token = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("authToken="))
-          ?.split("=")[1];
-
-        const { data } = await axios.get(`${API_URL}/patients/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        return data;
-      } catch (error) {
-        console.error("Error fetching patient:", error);
-        throw new Error("Failed to load patient data");
-      }
-    },
-    enabled: !!id, // Only fetch if `id` exists
-  });
-
-  const { data: tests = [], isLoading: loadingTests, error: testError } = useQuery({
-    queryKey: ["medicalTests"],
-    queryFn: async () => {
-      try {
-        const { data } = await axios.get(`${API_URL}/medicaltests`);
-        return data;
-      } catch (error) {
-        console.error("Error fetching tests:", error);
-        throw new Error("Failed to load medical tests");
-      }
+      if (!id) return {};
+      const { data } = await axios.get(`${API_URL}/patients/${id}`);
+      return data;
     },
   });
 
-  const saveTestMutation = useMutation({
-    mutationFn: async () => {
-      if (!selectedPatient || !selectedTest || !result) {
-        toast.error("All fields are required");
-        return;
-      }
+  useEffect(() => {
+    let filtered = testHistory;
 
-      try {
-        const payload = {
-          patientId: selectedPatient._id,
-          testId: selectedTest._id,
-          result,
-        };
+    if (searchTerm) {
+      filtered = filtered.filter((test) =>
+        test.testName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
-        await axios.post(`${API_URL}/medicalTestResults`, payload);
+    if (selectedTest) {
+      filtered = filtered.filter((test) => test.testName === selectedTest);
+    }
 
-        toast.success("Test result saved successfully");
-        queryClient.invalidateQueries(["testResults"]);
-        setOpenModal(false);
-        setResult("");
-      } catch (error) {
-        console.error("Error saving test result:", error);
-        toast.error("Failed to save test result");
-      }
-    },
-  });
+    if (startDate && endDate) {
+      filtered = filtered.filter(
+        (test) =>
+          dayjs(test.collectionDate).isAfter(dayjs(startDate)) &&
+          dayjs(test.collectionDate).isBefore(dayjs(endDate))
+      );
+    }
 
-  console.log(selectedPatient)
+    setFilteredTests(filtered);
+  }, [testHistory, searchTerm, selectedTest, startDate, endDate]);
 
-  if (!id) return <p>Invalid Patient ID</p>;
+  const getStatusColor = (result, reference) => {
+    if (!reference) return "black";
+    const [min, max] = reference.split("-").map(Number);
+    const value = parseFloat(result);
+    if (isNaN(value)) return "black";
+    if (value < min) return "red";
+    if (value > max) return "red";
+    if (value === min || value === max) return "yellow";
+    return "green";
+  };
 
   return (
     <div className="p-6 space-y-6">
       <Card>
-        <CardHeader title={<Typography variant="h6">Patient Details</Typography>} />
+        <CardHeader title={<Typography variant="h6">Patient Information</Typography>} />
         <CardContent>
-          {loadingPatient ? (
+          {isPatientLoading ? (
             <CircularProgress />
-          ) : patientError ? (
-            <Typography color="error">Error loading patient</Typography>
           ) : (
-            patient && (
-              <div className="border p-4 rounded-md">
-                <Typography variant="h6">{patient.ame}</Typography>
-                <Typography>Age: {patient.age}</Typography>
-                <Button
-                  variant="outlined"
-                  onClick={() => {
-                    setSelectedPatient(patient);
-                    setOpenModal(true);
-                  }}
-                >
-                  Enter Test Result
-                </Button>
-              </div>
-            )
+            <div className="mb-4">
+              <Typography variant="body1"><strong>Patient ID:</strong> {patientData.patientId}</Typography>
+              <Typography variant="body1"><strong>Full Name:</strong> {patientData.fullName}</Typography>
+              <Typography variant="body1"><strong>Date of Birth:</strong> {dayjs(patientData.dateOfBirth).format("YYYY-MM-DD")}</Typography>
+              <Typography variant="body1"><strong>Gender:</strong> {patientData.gender}</Typography>
+            </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Test Entry Modal */}
-      <Dialog open={openModal} onClose={() => setOpenModal(false)}>
-        <DialogTitle>Enter Test Result</DialogTitle>
-        <DialogContent>
-          <Typography variant="body1">Patient: {selectedPatient?.fullName}</Typography>
-          {loadingTests ? (
+      <Card>
+        <CardHeader title={<Typography variant="h6">Test History Overview</Typography>} />
+        <CardContent>
+          {isLoading ? (
             <CircularProgress />
-          ) : testError ? (
-            <Typography color="error">Error loading tests</Typography>
+          ) : testHistory.length === 0 ? (
+            <Typography>No previous test results available.</Typography>
           ) : (
-            <Select
-              fullWidth
-              value={selectedTest ? selectedTest._id : ""}
-              onChange={(e) => setSelectedTest(tests.find((t) => t._id === e.target.value))}
-            >
-              {tests.map((test) => (
-                <MenuItem key={test._id} value={test._id}>
-                  {test.testName}
-                </MenuItem>
-              ))}
-            </Select>
+            <>
+              <div className="flex gap-4 mb-4">
+                <TextField
+                  label="Search by Test Name"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  fullWidth
+                />
+                <Select
+                  value={selectedTest}
+                  onChange={(e) => setSelectedTest(e.target.value)}
+                  displayEmpty
+                  fullWidth
+                >
+                  <MenuItem value="">All Tests</MenuItem>
+                  {[...new Set(testHistory.map((t) => t.testName))].map((test) => (
+                    <MenuItem key={test} value={test}>
+                      {test}
+                    </MenuItem>
+                  ))}
+                </Select>
+                <DatePicker label="Start Date" value={startDate} onChange={(newDate) => setStartDate(newDate)} />
+                <DatePicker label="End Date" value={endDate} onChange={(newDate) => setEndDate(newDate)} />
+              </div>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Test Name</TableCell>
+                    <TableCell>Result</TableCell>
+                    <TableCell>Reference</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Doctor's Notes</TableCell>
+                    <TableCell>Diagnosis Hypothesis</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredTests.map((test) => (
+                    <TableRow key={test._id}>
+                      <TableCell>{test.testName}</TableCell>
+                      <TableCell>{test.result}</TableCell>
+                      <TableCell>{test.referenceValues || "N/A"}</TableCell>
+                      <TableCell style={{ color: getStatusColor(test.result, test.referenceValues) }}>
+                        {getStatusColor(test.result, test.referenceValues) === "green" ? "✅ Normal" :
+                          getStatusColor(test.result, test.referenceValues) === "yellow" ? "⚠️ Borderline" :
+                          "🔴 Abnormal"}
+                      </TableCell>
+                      <TableCell>{dayjs(test.collectionDate).format("YYYY-MM-DD")}</TableCell>
+                      <TableCell>{test.testNotes || "N/A"}</TableCell>
+                      <TableCell>{test.diagnosisHypothesis || "N/A"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </>
           )}
-          <TextField
-            fullWidth
-            label="Result"
-            value={result}
-            onChange={(e) => setResult(e.target.value)}
-            margin="dense"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenModal(false)}>Cancel</Button>
-          <Button onClick={() => saveTestMutation.mutate()} disabled={saveTestMutation.isLoading}>
-            {saveTestMutation.isLoading ? <CircularProgress size={24} /> : "Save"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </CardContent>
+      </Card>
     </div>
   );
 };
