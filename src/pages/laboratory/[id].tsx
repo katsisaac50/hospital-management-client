@@ -34,6 +34,9 @@ const LabTechnicianPatientPage = () => {
   const [selectedTest, setSelectedTest] = useState("");
   const [filteredTests, setFilteredTests] = useState([]);
 
+  console.log("Selected Test:", selectedTest);
+  console.log("Filtered Tests:", filteredTests);
+
   const { data: testHistory = [], isLoading } = useQuery({
     queryKey: ["testHistory", id],
     queryFn: async () => {
@@ -47,7 +50,15 @@ const LabTechnicianPatientPage = () => {
     queryKey: ["patient", id],
     queryFn: async () => {
       if (!id) return {};
-      const { data } = await axios.get(`${API_URL}/patients/${id}`);
+
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("authToken="))
+        ?.split("=")[1];
+        
+      const { data } = await axios.get(`${API_URL}/patients/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       return data;
     },
   });
@@ -86,6 +97,7 @@ const LabTechnicianPatientPage = () => {
     if (value === min || value === max) return "yellow";
     return "green";
   };
+  console.log(patientData);
 
   return (
     <div className="p-6 space-y-6">
@@ -97,7 +109,7 @@ const LabTechnicianPatientPage = () => {
           ) : (
             <div className="mb-4">
               <Typography variant="body1"><strong>Patient ID:</strong> {patientData.patientId}</Typography>
-              <Typography variant="body1"><strong>Full Name:</strong> {patientData.fullName}</Typography>
+              <Typography variant="body1"><strong>Full Name:</strong> {patientData.name}</Typography>
               <Typography variant="body1"><strong>Date of Birth:</strong> {dayjs(patientData.dateOfBirth).format("YYYY-MM-DD")}</Typography>
               <Typography variant="body1"><strong>Gender:</strong> {patientData.gender}</Typography>
             </div>
