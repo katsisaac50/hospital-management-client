@@ -107,12 +107,12 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
       router.push(`/laboratory/${patientId}`);
       return; // Exit function early
     }
-  
+  console.log(token)
     try {
       const response = await axios.get(`${API_URL}/patients/${patientId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-  
+      
       const patientData = response.data;
   
       if (!patientData.age) {

@@ -122,7 +122,7 @@ const Dashboard = () => {
           />
           <div>
             <h1 className="text-4xl font-bold text-blue-600">
-              Welcome Back, {user.username}!
+              Welcome Back, {user.name}!
             </h1>
             <p className="text-gray-600 mt-2 text-lg">
               Have you had a routine health check this month?
