@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useRouter } from "next/router";
+import { useAppContext } from "../../context/AppContext";
 import {
   Button,
   Card,
@@ -22,14 +23,14 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import AddTestResultModal from "./../../components/addTestResultModal";
-
+import { validateTestChange } from "../../../utils/validation";
 
 
 const LabTechnicianPatientPage = () => {
   const router = useRouter();
   const { id } = router.query;
   const queryClient = useQueryClient();
-
+  const { user, setUser } = useAppContext();
   const [token, setToken] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTest, setNewTest] = useState("");
@@ -39,8 +40,10 @@ const LabTechnicianPatientPage = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [tests, setTests] = useState([]);
+  const [originalTestHistory, setOriginalTestHistory] = useState([]);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 
   useEffect(() => {
     if (!id) return;
@@ -68,6 +71,12 @@ const LabTechnicianPatientPage = () => {
     },
     enabled: !!id,
   });
+
+  useEffect(() => {
+    if (testHistory.length > 0) {
+      setOriginalTestHistory(testHistory);
+    }
+  }, [testHistory]);
 
   // Fetch patient details
   const { data: patientData = {}, isLoading: isPatientLoading } = useQuery({
@@ -121,7 +130,7 @@ const LabTechnicianPatientPage = () => {
     try {
       const response = await fetch(`${API_URL}/update-status/${testId.row._id}`, {
         method: 'PUT',
-        body: JSON.stringify({ testStatus: newStatus.target.value }),
+        body: JSON.stringify({ testStatus: newStatus.target.value , user}),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -144,15 +153,30 @@ const LabTechnicianPatientPage = () => {
   // Mutation for updating a test result
   const updateTestMutation = useMutation({
     mutationFn: async (params) => {
-      await axios.put(
-        `${API_URL}/medicalTestResults/${params.row._id}`,
-        { result: params.row.result, testId: params.row._id },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      queryClient.invalidateQueries(["testHistory", id]);
-      toast.success("Test result updated!");
+      console.log('para', params)
+
+  if (!validateTestChange(originalTestHistory, params.row.result)) return;
+
+      try {
+        const response = await axios.put(
+          `${API_URL}/medicalTestResults/${params.row._id}`,
+          { result: params.row.result, testId: params.row._id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+  
+        if (response.status >= 200 && response.status < 300) {
+          queryClient.invalidateQueries(["testHistory", id]);
+          toast.success("Test result updated!");
+        } else {
+          throw new Error("Failed to update test result.");
+        }
+      } catch (error) {
+        console.error("Error updating test result:", error);
+        toast.error("Failed to update test result.");
+      }
     },
   });
+  
 
   // Mutation for deleting a test result
   const deleteTestMutation = useMutation({
