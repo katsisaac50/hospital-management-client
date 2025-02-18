@@ -125,37 +125,52 @@ const LabTechnicianPatientPage = () => {
     },
   });
 
-  const handleUpdateStatus = async (newStatus,testId ) => {
-    console.log(testId, newStatus)
+  const handleUpdateStatus = async (event, params) => {
+    const newStatus = event.target.value;
+    const testId = params.row._id; // Correct ID reference
+  
+    console.log("Updating status for:", testId, "New Status:", newStatus);
+  
+    // Optimistic update
+    setTests((prevTests) =>
+      prevTests.map((test) =>
+        test._id === testId ? { ...test, testStatus: newStatus } : test
+      )
+    );
+  
     try {
-      const response = await fetch(`${API_URL}/update-status/${testId.row._id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ testStatus: newStatus.target.value , user}),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        // Optionally, update the local state to reflect the change immediately
-        const updatedTests = tests.map((test) =>
-          test._id === testId ? { ...test, testStatus: newStatus } : test
-        );
-        setTests(updatedTests);
+      const response = await axios.put(
+        `${API_URL}/update-status/${testId}`,
+        { testStatus: newStatus, user },
+        { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+      );
+  
+      if (response.status >= 200 && response.status < 300) {
+        toast.success("Status updated successfully!");
+        queryClient.invalidateQueries(["testHistory", id]); // Refresh data
       } else {
-        throw new Error('Failed to update status');
+        throw new Error("Failed to update status");
       }
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error("Error updating status:", error);
+      toast.error("Failed to update status.");
+  
+      // Rollback if request fails
+      setTests((prevTests) =>
+        prevTests.map((test) =>
+          test._id === testId ? { ...test, testStatus: params.row.testStatus } : test
+        )
+      );
     }
   };
+  
 
   // Mutation for updating a test result
   const updateTestMutation = useMutation({
     mutationFn: async (params) => {
       console.log('para', params)
 
-  if (!validateTestChange(originalTestHistory, params.row.result)) return;
+  if (!validateTestChange(originalTestHistory, params.row.result, params.row._id)) return;
 
       try {
         const response = await axios.put(
@@ -237,10 +252,10 @@ const LabTechnicianPatientPage = () => {
         headerName: "Status",
         flex: 1,
         editable: true, 
-        renderCell: (value, row) => (
+        renderCell: (params) => (
           <Select
-            value={value.row.testStatus}
-            onChange={(e) => handleUpdateStatus(e, value)}
+          value={params.row.testStatus}
+          onChange={(e) => handleUpdateStatus(e, params)}
             fullWidth
           >
             <MenuItem value="pending">Pending</MenuItem>
@@ -380,3 +395,5 @@ const LabTechnicianPatientPage = () => {
 };
 
 export default LabTechnicianPatientPage;
+
+
