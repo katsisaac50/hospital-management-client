@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import * as cookie from "cookie";
 import "jspdf-autotable";
 import { useRouter } from "next/router";
@@ -57,7 +57,7 @@ export async function getServerSideProps(context: {
       },
     });
 
-    console.log(response)
+    // console.log(response)
 
     return { props: { patients: response.data } };
   } catch (error) {
@@ -107,7 +107,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
       router.push(`/laboratory/${patientId}`);
       return; // Exit function early
     }
-  console.log(token)
+  // console.log(token)
     try {
       const response = await axios.get(`${API_URL}/patients/${patientId}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -122,7 +122,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
       setSelectedPatient(patientData);
       setIsModalOpen(true);
     } catch (error: unknown) {
-      console.error("Error fetching patient details:", error);
+      console.error("Error fetching patient details:",  error.response?.data?.message || error.message);
   
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         alert("Session expired. Please log in again.");
@@ -170,7 +170,11 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
       );
       alert("Patient updated successfully.");
       closeModal();
-      window.location.reload();
+      // window.location.reload();
+      setSelectedPatient({ ...selectedPatient, ...formData });
+setPatients((prevPatients) =>
+  prevPatients.map((p) => (p._id === selectedPatient._id ? { ...p, ...formData } : p))
+);
     } catch (error) {
       console.error("Error updating patient:", error);
       alert("Failed to update the patient. Please try again.");
@@ -206,7 +210,11 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
       );
       alert("Patient deleted successfully.");
       closeModal();
-      window.location.reload();
+      setSelectedPatient({ ...selectedPatient, ...formData });
+setPatients((prevPatients) =>
+  prevPatients.map((p) => (p._id === selectedPatient._id ? { ...p, ...formData } : p))
+);
+      // window.location.reload();
     } catch (error) {
       console.error("Error deleting patient:", error);
       alert("Failed to delete the patient. Please try again.");
@@ -219,11 +227,20 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
     router.push("/add-patient");
   };
 
-  const filteredPatients = patients.filter(patient => {
-    const matchesNameOrId = patient.name.toLowerCase().includes(searchQuery.toLowerCase()) || patient._id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesGender = filterGender ? patient.gender === filterGender : true;
-    return matchesNameOrId && matchesGender;
-  });
+  // const filteredPatients = patients.filter(patient => {
+  //   const matchesNameOrId = patient.name.toLowerCase().includes(searchQuery.toLowerCase()) || patient._id.toLowerCase().includes(searchQuery.toLowerCase());
+  //   const matchesGender = filterGender ? patient.gender === filterGender : true;
+  //   return matchesNameOrId && matchesGender;
+  // });
+  const filteredPatients = useMemo(() => {
+    return patients.filter((patient) => {
+      const matchesNameOrId =
+        patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        patient._id.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesGender = filterGender ? patient.gender === filterGender : true;
+      return matchesNameOrId && matchesGender;
+    });
+  }, [patients, searchQuery, filterGender]);  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col items-center justify-center py-8 px-4">
@@ -252,6 +269,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
             onClick={navigateToAddPatient}
             className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 shadow-lg transition"
           >
+            {console.log("Selected Patient:", selectedPatient)}
             Add New Patient
           </button>
         </div>
@@ -285,7 +303,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
           onClick={closeModal}
         >
           <div
-            className="bg-white rounded-lg p-6 shadow-lg max-w-3xl w-full"
+            className="modal-container bg-white rounded-lg p-6 shadow-lg max-w-3xl w-full"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between">
@@ -307,17 +325,23 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
                     <strong>Contact:</strong> {selectedPatient.contact}
                   </p>
                   {/* Only show medical data for doctors or admins */}
+                  {console.log("User Role:", user?.role)}
                   {user?.role !== "labTechnician" && (
                     <>
                       <p>
-                        <strong>Medical History:</strong> {selectedPatient.medicalHistory}
+                        <strong>Medical History:</strong> {selectedPatient.medicalHistory || "No history available"}
                       </p>
                       <p>
-                        <strong>Diagnosis:</strong> {selectedPatient.currentDiagnosis}
+                        <strong>Diagnosis:</strong> {selectedPatient.currentDiagnosis || "No diagnosis available"}
                       </p>
                     </>
                   )}
                   <div className="flex justify-end gap-4 mt-6">
+                  <button 
+                  className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-grey-600"
+                  onClick={() => router.push(`/patients/DischargeForm?patientId=${selectedPatient._id}`)}>
+                    Discharge
+                  </button>
                     <button
                       className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
                       onClick={handleEditClick}

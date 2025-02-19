@@ -53,6 +53,17 @@ body.glass {
   color: white;
 }
 
+/* modal always has proper contrast in both themes*/
+.modal-container {
+  background-color: white !important;
+  color: black !important;
+}
+
+body.dark .modal-container {
+  background-color: #1f2937 !important;
+  color: white !important;
+}
+
 
 .react-calendar {
   background: #ffffff;
