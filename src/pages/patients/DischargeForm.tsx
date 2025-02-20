@@ -1,59 +1,80 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
-import { 
-  TextField, Button, Grid, Typography, Container, Box, CircularProgress, Paper 
+import {
+  TextField,
+  Button,
+  Grid,
+  Typography,
+  Container,
+  Box,
+  CircularProgress,
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles"; 
+import { useTheme } from "@mui/material/styles";
+import DischargeFormDialog from "../../components/DischargeFormDialog";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const DischargeForm = () => {
   const router = useRouter();
-  const theme = useTheme(); // Get global theme
-  const [saving, setSaving] = useState(false);
+  const theme = useTheme();
   const { patientId } = router.query;
 
-  const [formData, setFormData] = useState({
-    finalDiagnosis: "",
-    medicationsOnDischarge: [],
-    followUpAppointments: [{ date: "", reason: "" }],
-    dischargeInstructions: "",
-    doctorNotes: "",
-  });
-
+  const [formData, setFormData] = useState([]);
+  const [selectedForm, setSelectedForm] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!patientId) return;
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const { data } = await axios.get(`${API_URL}/discharge/${patientId}`);
-        console.log(data)
-        setFormData(data);
-        setError(null);
-      } catch (error) {
-        setError(error.response?.data?.message || "Error fetching data");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    fetchDischargeForms();
   }, [patientId]);
+
+  const fetchDischargeForms = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axios.get(`${API_URL}/discharge/${patientId}`);
+      console.log(data)
+      setFormData(data || []);
+      setError(null);
+    } catch (error) {
+      setError(error.response?.data?.message || "No discharge form found.");
+      setFormData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setSelectedForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
+   
     try {
-      await axios.post(`${API_URL}/discharge/${patientId}`, formData);
+      if (selectedForm?._id) {
+        await axios.put(`${API_URL}/discharge/${patientId}/${selectedForm.index}`, selectedForm);
+      } else {
+        await axios.post(`${API_URL}/discharge/${patientId}`, selectedForm);
+      }
       alert("Saved successfully!");
+      fetchDischargeForms();
+      setIsEditing(false);
     } catch (error) {
       console.error("Save error:", error);
     } finally {
@@ -61,173 +82,165 @@ const DischargeForm = () => {
     }
   };
 
-  // if (loading) return <Typography>Loading...</Typography>;
-  if (loading) return <Box sx={{ textAlign: "center", mt: 4 }}><CircularProgress /></Box>;
+  const handleEdit = (index) => {
+    console.log(index)
+    setSelectedForm({ ...formData[index], index });
+    setSelectedIndex(index);
+    setIsEditing(true);
+  };
 
+  const handleUpdate = async () => {
+    if (!selectedForm) return;
+    try {
+      await axios.put(`${API_URL}/discharge/${patientId}/${selectedForm.index}`, selectedForm);
+      alert("Form updated!");
+      fetchDischargeForms();
+      setIsEditing(false);
+    } catch (error) {
+      alert("Failed to update form.");
+    }
+  };
+
+  const handleDelete = async (index) => {
+    if (!window.confirm("Are you sure you want to delete this form?")) return;
+
+    try {
+      await axios.delete(`${API_URL}/discharge/${patientId}/${formData[index]._id}`);
+      alert("Form deleted!");
+      fetchDischargeForms();
+    } catch (error) {
+      alert("Failed to delete form.");
+    }
+  };
+
+  const handleCreateNew = () => {
+    setSelectedForm({
+      finalDiagnosis: "",
+      medicationsOnDischarge: [],
+      followUpAppointments: [{ date: "", reason: "" }],
+      dischargeInstructions: "",
+      doctorNotes: "",
+    });
+    setSelectedIndex(null);
+    setIsEditing(true);
+  };
+
+  if (loading) return <Box sx={{ textAlign: "center", mt: 4 }}><CircularProgress /></Box>;
 
   return (
     <Container maxWidth="md">
-      <Paper
-        elevation={3}
-        sx={{
-          p: 3,
-          mt: 4,
-          borderRadius: 3,
-          backdropFilter: "blur(10px)",
-          // backgroundColor:
-          //   theme.palette.mode === "dark"
-          //     ? "rgba(240, 237, 237, 0.3)"
-          //     : "rgba(255, 255, 255, 0.2)",
-          backgroundColor: theme.palette.background.paper,
-          color: theme.palette.text.primary,
-          border: `1px solid ${theme.palette.divider}`,
-        }}
-      >
-        <Typography variant="h4" gutterBottom align="center">
-          Discharge Summary
-        </Typography>
+      {/* Select Discharge Form */}
+      <FormControl fullWidth>
+        <InputLabel>Select Discharge Form</InputLabel>
+        <Select value={selectedIndex} onChange={(e) => setSelectedIndex(e.target.value)}>
+          {formData.map((form, index) => (
+            <MenuItem key={index} value={index}>
+              {new Date(form.createdAt).toLocaleDateString()}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
 
-        {error && <Typography color="error">{error}</Typography>}
+      {selectedIndex !== null && formData[selectedIndex] && (
+        <Paper elevation={2} sx={{ p: 2, mt: 2 }}>
+          <Typography><strong>Final Diagnosis:</strong> {formData[selectedIndex].finalDiagnosis}</Typography>
+          <Typography><strong>Medications:</strong> {formData[selectedIndex].medicationsOnDischarge.join(", ")}</Typography>
+          <Typography><strong>Discharge Instructions:</strong> {formData[selectedIndex].dischargeInstructions}</Typography>
 
-        <Box component="form" onSubmit={handleSubmit}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                label="Final Diagnosis"
-                name="finalDiagnosis"
-                variant="outlined"
-                fullWidth
-                value={formData.finalDiagnosis}
-                onChange={handleChange}
-                sx={{ bgcolor: "transparent", color: "inherit" }}
-              />
-            </Grid>
+          <Button variant="contained" color="primary" sx={{ mt: 1, mr: 1 }} onClick={() => handleEdit(selectedIndex)}>
+            Edit
+          </Button>
+          <Button variant="contained" color="secondary" sx={{ mt: 1 }} onClick={() => handleDelete(selectedIndex)}>
+            Delete
+          </Button>
+        </Paper>
+      )}
 
-            <Grid item xs={12}>
-              <TextField
-                label="Medications on Discharge"
-                name="medicationsOnDischarge"
-                variant="outlined"
-                fullWidth
-                value={formData.medicationsOnDischarge?.join(", ") || ""}
-                onChange={(e) =>
-                  handleChange({
-                    target: { name: "medicationsOnDischarge", value: e.target.value.split(", ") },
-                  })
-                }
-                sx={{ bgcolor: "transparent", color: "inherit" }}
-              />
-            </Grid>
+      {/* Create or Edit Form Dialog */}
+      {isEditing && (
+        <DischargeFormDialog
+        isEditing = {isEditing}
+        setIsEditing = {setIsEditing}
+        selectedForm = {selectedForm}
+        setFormData = {setSelectedForm}
+        handleChange = {handleChange}
+        handleSubmit = {handleSubmit}
+        handleUpdate = {handleUpdate}
+        handleDelete = {() => handleDelete(selectedIndex)}
+        />
+        // <Dialog open={isEditing} onClose={() => setIsEditing(false)}>
+        //   <DialogTitle>{selectedForm?._id ? "Edit Discharge Form" : "Create New Discharge Form"}</DialogTitle>
+        //   <DialogContent>
+        //     <TextField
+        //       label="Final Diagnosis"
+        //       name="finalDiagnosis"
+        //       fullWidth
+        //       value={selectedForm?.finalDiagnosis || ""}
+        //       onChange={handleChange}
+        //       sx={{ mt: 2 }}
+        //     />
+        //     <TextField
+        //       label="Discharge Instructions"
+        //       name="dischargeInstructions"
+        //       fullWidth
+        //       multiline
+        //       rows={3}
+        //       value={selectedForm?.dischargeInstructions || ""}
+        //       onChange={handleChange}
+        //       sx={{ mt: 2 }}
+        //     />
+        //     <TextField 
+        //     label="Medications on Discharge" 
+        //     name="medicationsOnDischarge" 
+        //     variant="outlined" 
+        //     fullWidth 
+        //     value={selectedForm?.medicationsOnDischarge?.join(", ") || ""} 
+        //     onChange={(e) => handleChange({ target: { name: "medicationsOnDischarge", value: e.target.value.split(", ") } })} />
+        //     <Typography variant="h6">Follow-up Appointments</Typography>
+        //         {selectedForm?.followUpAppointments.map((appointment, index) => (
+        //           <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
+        //             <Grid item xs={6}>
+        //               <TextField type="date" name="date" variant="outlined" fullWidth value={appointment.date} onChange={(e) => {
+        //                 const newAppointments = [...selectedForm.followUpAppointments];
+        //                 newAppointments[index].date = e.target.value;
+        //                 setFormData((prev) => ({ ...prev, followUpAppointments: newAppointments }));
+        //               }} />
+        //             </Grid>
+        //             <Grid item xs={6}>
+        //               <TextField label="Reason" name="reason" variant="outlined" fullWidth value={appointment.reason} onChange={(e) => {
+        //                 const newAppointments = [...selectedForm.followUpAppointments];
+        //                 newAppointments[index].reason = e.target.value;
+        //                 setFormData((prev) => ({ ...prev, followUpAppointments: newAppointments }));
+        //               }} />
+        //             </Grid>
+        //           </Grid>
+        //         ))}
+        //       <Grid item xs={12}>
+        //         <TextField label="Discharge Instructions" name="dischargeInstructions" variant="outlined" fullWidth multiline rows={3} value={selectedForm?.dischargeInstructions || ""} onChange={handleChange} />
+        //       </Grid>
+        //       <Grid item xs={12}>
+        //         <TextField label="Doctor's Notes" name="doctorNotes" variant="outlined" fullWidth multiline rows={4} value={selectedForm?.doctorNotes || ""} onChange={handleChange} />
+        //       </Grid>
+        //   </DialogContent>
+        //   <DialogActions>
+        //     <Button onClick={() => setIsEditing(false)}>Cancel</Button>
+        //     {selectedForm?._id ? (
+        //       <Button onClick={handleUpdate} color="primary">Update</Button>
+        //     ) : (
+        //       <Button onClick={handleSubmit} color="primary">Create</Button>
+        //     )}
+        //     {selectedForm?._id && (
+        //       <Button variant="contained" color="secondary" onClick={() => handleDelete(selectedIndex)}>
+        //         Delete
+        //       </Button>
+        //     )}
+        //   </DialogActions>
+        // </Dialog>
+      )}
 
-            <Grid item xs={12}>
-              <Typography variant="h6">Follow-up Appointments</Typography>
-              {formData.followUpAppointments.map((appointment, index) => (
-                <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
-                  <Grid item xs={6}>
-                    <TextField
-                      type="date"
-                      name="date"
-                      variant="outlined"
-                      fullWidth
-                      value={appointment.date}
-                      onChange={(e) =>
-                        setFormData((prev) => {
-                          const newAppointments = [...prev.followUpAppointments];
-                          newAppointments[index].date = e.target.value;
-                          return { ...prev, followUpAppointments: newAppointments };
-                        })
-                      }
-                      sx={{ bgcolor: "transparent", color: "inherit" }}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      label="Reason"
-                      name="reason"
-                      variant="outlined"
-                      fullWidth
-                      value={appointment.reason}
-                      onChange={(e) =>
-                        setFormData((prev) => {
-                          const newAppointments = [...prev.followUpAppointments];
-                          newAppointments[index].reason = e.target.value;
-                          return { ...prev, followUpAppointments: newAppointments };
-                        })
-                      }
-                      sx={{ bgcolor: "transparent", color: "inherit" }}
-                    />
-                  </Grid>
-                </Grid>
-              ))}
-              <Button variant="outlined" color="secondary" fullWidth onClick={() => {
-                if (
-                    formData.followUpAppointments.some(
-                      (app) => !app.date || !app.reason
-                    )
-                  ) {
-                    alert("Please fill in the existing appointment before adding a new one.");
-                    return;
-                  }
-                setFormData((prev) => ({
-                  ...prev,
-                  followUpAppointments: [...prev.followUpAppointments, { date: "", reason: "" }],
-                }));
-              }} sx={{ mb: 2 }}>
-                + Add Follow-up Appointment
-              </Button>
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Discharge Instructions"
-                name="dischargeInstructions"
-                variant="outlined"
-                fullWidth
-                multiline
-                rows={3}
-                value={formData.dischargeInstructions}
-                onChange={handleChange}
-                sx={{ bgcolor: "transparent", color: "inherit" }}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Doctor's Notes"
-                name="doctorNotes"
-                variant="outlined"
-                fullWidth
-                multiline
-                rows={4}
-                value={formData.doctorNotes}
-                onChange={handleChange}
-                sx={{ bgcolor: "transparent", color: "inherit" }}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-            <Button variant="contained" color="primary" type="submit" fullWidth sx={{ mt: 2 }} disabled={saving}>
-              {saving ? "Saving..." : "Save Discharge Form"}
-            </Button>
-            </Grid>
-          </Grid>
-        </Box>
-        {formData && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h6">Existing Discharge Summary</Typography>
-            <Typography><strong>Final Diagnosis:</strong> {formData.finalDiagnosis}</Typography>
-            <Typography><strong>Medications on Discharge:</strong> {formData.medicationsOnDischarge.join(', ')}</Typography>
-            <Typography><strong>Follow-up Appointments:</strong></Typography>
-            {formData.followUpAppointments.map((appointment, index) => (
-              <Typography key={index}>
-                {appointment.date} - {appointment.reason}
-              </Typography>
-            ))}
-            <Typography><strong>Discharge Instructions:</strong> {formData.dischargeInstructions}</Typography>
-            <Typography><strong>Doctor's Notes:</strong> {formData.doctorNotes}</Typography>
-          </Box>
-        )}
-      </Paper>
+      <Button variant="outlined" color="primary" fullWidth sx={{ mt: 3 }} onClick={handleCreateNew}>
+        Create New Discharge Form
+      </Button>
     </Container>
   );
 };
