@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
+import { useTheme } from '../../context/ThemeContext';
 import {
   TextField,
   Button,
@@ -19,16 +20,15 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+// import { useTheme } from "@mui/material/styles";
 import DischargeFormDialog from "../../components/DischargeFormDialog";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const DischargeForm = () => {
   const router = useRouter();
-  const theme = useTheme();
   const { patientId } = router.query;
-
+  const { theme, toggleTheme } = useTheme();
   const [formData, setFormData] = useState([]);
   const [selectedForm, setSelectedForm] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -36,6 +36,7 @@ const DischargeForm = () => {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isDarkMode = theme === "dark";
 
   useEffect(() => {
     if (!patientId) return;
@@ -131,10 +132,37 @@ const DischargeForm = () => {
     <Container maxWidth="md">
       {/* Select Discharge Form */}
       <FormControl fullWidth>
-        <InputLabel>Select Discharge Form</InputLabel>
-        <Select value={selectedIndex} onChange={(e) => setSelectedIndex(e.target.value)}>
+      <InputLabel 
+        sx={{
+          color: isDarkMode ? "#B0B0B0" : "#333",
+          "&.Mui-focused": { color: "primary.main" }
+        }}
+      >Select Discharge Form</InputLabel>
+        <Select
+        value={selectedIndex}
+        onChange={(e) => setSelectedIndex(e.target.value)}
+        variant="outlined"
+        sx={{
+          bgcolor: isDarkMode ? "#2A2A2A" : "#FFF",
+          borderRadius: 2,
+          color: isDarkMode ? "#E0E0E0" : "#333",
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: isDarkMode ? "#444" : "#CCC"
+          },
+          "&:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "primary.main"
+          },
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "primary.main"
+          }
+        }}
+      >
           {formData.map((form, index) => (
-            <MenuItem key={index} value={index}>
+            <MenuItem key={index} value={index}  sx={{
+              bgcolor: isDarkMode ? "#333" : "#FFF",
+              color: isDarkMode ? "#FFF" : "#333",
+              "&:hover": { bgcolor: "primary.light" }
+            }}>
               {new Date(form.createdAt).toLocaleDateString()}
             </MenuItem>
           ))}
