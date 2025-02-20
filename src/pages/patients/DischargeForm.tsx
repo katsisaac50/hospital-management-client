@@ -3,18 +3,12 @@ import axios from "axios";
 import { useRouter } from "next/router";
 import { useTheme } from '../../context/ThemeContext';
 import {
-  TextField,
   Button,
-  Grid,
   Typography,
   Container,
   Box,
   CircularProgress,
   Paper,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   FormControl,
   InputLabel,
   Select,
@@ -129,7 +123,18 @@ const DischargeForm = () => {
   if (loading) return <Box sx={{ textAlign: "center", mt: 4 }}><CircularProgress /></Box>;
 
   return (
-    <Container maxWidth="md">
+    <Container maxWidth="md" sx={{ mt: 6 }}>
+      <Typography
+  variant="h4"
+  sx={{
+    textAlign: "center",
+    fontWeight: "bold",
+    mb: 2,
+    color: isDarkMode ? "#FFF" : "#333"
+  }}
+>
+Discharge Section
+</Typography>
       {/* Select Discharge Form */}
       <FormControl fullWidth>
       <InputLabel 
@@ -139,7 +144,7 @@ const DischargeForm = () => {
         }}
       >Select Discharge Form</InputLabel>
         <Select
-        value={selectedIndex}
+        value={selectedIndex ?? ""}
         onChange={(e) => setSelectedIndex(e.target.value)}
         variant="outlined"
         sx={{
@@ -190,80 +195,12 @@ const DischargeForm = () => {
         isEditing = {isEditing}
         setIsEditing = {setIsEditing}
         selectedForm = {selectedForm}
-        setFormData = {setSelectedForm}
+        setFormData = {setFormData}
         handleChange = {handleChange}
         handleSubmit = {handleSubmit}
         handleUpdate = {handleUpdate}
         handleDelete = {() => handleDelete(selectedIndex)}
         />
-        // <Dialog open={isEditing} onClose={() => setIsEditing(false)}>
-        //   <DialogTitle>{selectedForm?._id ? "Edit Discharge Form" : "Create New Discharge Form"}</DialogTitle>
-        //   <DialogContent>
-        //     <TextField
-        //       label="Final Diagnosis"
-        //       name="finalDiagnosis"
-        //       fullWidth
-        //       value={selectedForm?.finalDiagnosis || ""}
-        //       onChange={handleChange}
-        //       sx={{ mt: 2 }}
-        //     />
-        //     <TextField
-        //       label="Discharge Instructions"
-        //       name="dischargeInstructions"
-        //       fullWidth
-        //       multiline
-        //       rows={3}
-        //       value={selectedForm?.dischargeInstructions || ""}
-        //       onChange={handleChange}
-        //       sx={{ mt: 2 }}
-        //     />
-        //     <TextField 
-        //     label="Medications on Discharge" 
-        //     name="medicationsOnDischarge" 
-        //     variant="outlined" 
-        //     fullWidth 
-        //     value={selectedForm?.medicationsOnDischarge?.join(", ") || ""} 
-        //     onChange={(e) => handleChange({ target: { name: "medicationsOnDischarge", value: e.target.value.split(", ") } })} />
-        //     <Typography variant="h6">Follow-up Appointments</Typography>
-        //         {selectedForm?.followUpAppointments.map((appointment, index) => (
-        //           <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
-        //             <Grid item xs={6}>
-        //               <TextField type="date" name="date" variant="outlined" fullWidth value={appointment.date} onChange={(e) => {
-        //                 const newAppointments = [...selectedForm.followUpAppointments];
-        //                 newAppointments[index].date = e.target.value;
-        //                 setFormData((prev) => ({ ...prev, followUpAppointments: newAppointments }));
-        //               }} />
-        //             </Grid>
-        //             <Grid item xs={6}>
-        //               <TextField label="Reason" name="reason" variant="outlined" fullWidth value={appointment.reason} onChange={(e) => {
-        //                 const newAppointments = [...selectedForm.followUpAppointments];
-        //                 newAppointments[index].reason = e.target.value;
-        //                 setFormData((prev) => ({ ...prev, followUpAppointments: newAppointments }));
-        //               }} />
-        //             </Grid>
-        //           </Grid>
-        //         ))}
-        //       <Grid item xs={12}>
-        //         <TextField label="Discharge Instructions" name="dischargeInstructions" variant="outlined" fullWidth multiline rows={3} value={selectedForm?.dischargeInstructions || ""} onChange={handleChange} />
-        //       </Grid>
-        //       <Grid item xs={12}>
-        //         <TextField label="Doctor's Notes" name="doctorNotes" variant="outlined" fullWidth multiline rows={4} value={selectedForm?.doctorNotes || ""} onChange={handleChange} />
-        //       </Grid>
-        //   </DialogContent>
-        //   <DialogActions>
-        //     <Button onClick={() => setIsEditing(false)}>Cancel</Button>
-        //     {selectedForm?._id ? (
-        //       <Button onClick={handleUpdate} color="primary">Update</Button>
-        //     ) : (
-        //       <Button onClick={handleSubmit} color="primary">Create</Button>
-        //     )}
-        //     {selectedForm?._id && (
-        //       <Button variant="contained" color="secondary" onClick={() => handleDelete(selectedIndex)}>
-        //         Delete
-        //       </Button>
-        //     )}
-        //   </DialogActions>
-        // </Dialog>
       )}
 
       <Button variant="outlined" color="primary" fullWidth sx={{ mt: 3 }} onClick={handleCreateNew}>
