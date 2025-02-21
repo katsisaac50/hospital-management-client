@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import generatePDF from "../components/generatePDF";
 import { calculateAge, formatDate } from '../lib/utils';
 import { useAppContext } from "../context/AppContext";
+import LabRequestForm from "./laboratory/lab-test-request";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -87,8 +88,54 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   const [filterGender, setFilterGender] = useState("");
   const router = useRouter();
   const { user } = useAppContext();
+  const [openTest, setOpenTest] = useState(false);
+
+  const handleTestOpen = () =>setOpenTest(true);
+  const handleTestClose = () => setOpenTest(false);
 
   // console.log(user);
+
+  const handleTestSubmit = async (formData) => {
+    console.log(formData)
+    if (!formData.patientId || !formData.doctorId || !formData.testName) {
+      alert("Please fill in all required fields: Patient ID, Doctor ID, and Test Name.");
+      return;
+    }
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("authToken="))
+      ?.split("=")[1];
+  
+    if (!token) {
+      alert("Session expired or you are not logged in. Redirecting to login...");
+      window.location.href = "/login";
+      return;
+    }
+    // console.log(token)
+    try {
+      const response = await fetch(`${API_URL}/lab-test-request`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+  
+      const data = await response.json();
+      console.log(data);
+      if (response.ok) {
+        alert("Test request submitted successfully!");
+      } else {
+        alert(`Error: ${data.message}`);
+      }
+  
+      // handleTestClose();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("There was an error submitting the request.");
+    }
+  };
   
   const handlePatientClick = async (patientId: string) => {
     const token = document.cookie
@@ -354,6 +401,13 @@ setPatients((prevPatients) =>
                     >
                       Generate PDF
                     </button>
+                    {/* Add the "Request Lab Test" button */}
+                    <button
+                      className="bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600"
+                      onClick={handleTestOpen}
+                    >
+                      Request Lab Test
+                    </button>
                     <button
                       className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600"
                       onClick={handleDeleteClick}
@@ -424,6 +478,7 @@ setPatients((prevPatients) =>
           </div>
         </div>
       )}
+      <LabRequestForm open={openTest} onClose={handleTestClose} onSubmit={handleTestSubmit} selectedPatient={selectedPatient} />
     </div>
   );
 };
