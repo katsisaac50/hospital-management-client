@@ -6,7 +6,16 @@ import { ThemeProvider } from '../context/ThemeContext';
 import { ToastContainer , toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ErrorBoundary from '../components/ErrorBoundary';
+import axios from 'axios';
 // import { AuthProvider } from "../context/AuthContext";
+import * as Sentry from '@sentry/nextjs';
+
+Sentry.init({
+  // dsn: 'https://your-sentry-dsn', // Replace with your actual DSN
+  dsn: 'http://localhost:3000',
+  tracesSampleRate: 1.0,
+});
+
 
 // Function to extract meaningful error messages
 const handleApiError = (error: unknown) => {
@@ -14,6 +23,8 @@ const handleApiError = (error: unknown) => {
     const status = error.response?.status;
     const message = error.response?.data?.message || "An unexpected error occurred.";
     const url = error.config?.url || ''; // Extract endpoint URL
+     // Log to Sentry
+    Sentry.captureException(error, { tags: { endpoint: url, status } });
 
     // Custom messages based on endpoints
     if (url.includes('/api/auth/login')) {
@@ -57,6 +68,7 @@ const handleApiError = (error: unknown) => {
         toast.error(message);
     }
   } else {
+     Sentry.captureException(error);
     toast.error("An unknown error occurred.");
   }
 };

@@ -7,6 +7,8 @@ import generatePDF from "../components/generatePDF";
 import { calculateAge, formatDate } from '../lib/utils';
 import { useAppContext } from "../context/AppContext";
 import LabRequestForm from "./laboratory/lab-test-request";
+import { useTheme } from "../context/ThemeContext";
+import { ArrowsUpDownIcon, MagnifyingGlassIcon, AdjustmentsHorizontalIcon, UserPlusIcon } from "@heroicons/react/24/solid";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -89,6 +91,8 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   const router = useRouter();
   const { user } = useAppContext();
   const [openTest, setOpenTest] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const [view, setView] = useState("grid");
 
   const handleTestOpen = () =>setOpenTest(true);
   const handleTestClose = () => setOpenTest(false);
@@ -290,58 +294,123 @@ setPatients((prevPatients) =>
   }, [patients, searchQuery, filterGender]);  
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col items-center justify-center py-8 px-4">
-      <div className="max-w-6xl w-full bg-white shadow-2xl rounded-lg p-6">
-        <h3 className="text-4xl font-semibold text-center text-blue-700 py-4">
+    <div className={`min-h-screen flex flex-col items-center justify-center py-8 px-4 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gradient-to-br from-blue-50 to-blue-100'}`}>
+      <div className={`max-w-6xl w-full ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'} shadow-2xl rounded-lg p-6`}>
+        <h3 className={`text-4xl font-semibold text-center py-4 ${theme === 'dark' ? 'text-white' : 'text-blue-700'}`}>
           Patients Dashboard
         </h3>
-        <div className="flex justify-between mb-6">
-          <input
-            type="text"
-            placeholder="Search by Name or ID"
-            className="border rounded-lg px-4 py-2 w-1/3 shadow-sm focus:outline-blue-500"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <select
-            className="border rounded-lg px-4 py-2 shadow-sm focus:outline-blue-500"
-            value={filterGender}
-            onChange={(e) => setFilterGender(e.target.value)}
-          >
-            <option value="">Filter by Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-          </select>
-          <button
-            onClick={navigateToAddPatient}
-            className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 shadow-lg transition"
-          >
-            {console.log("Selected Patient:", selectedPatient)}
-            Add New Patient
-          </button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
+  {/* Left: Switch View Button */}
+  <button
+    className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+    onClick={() => setView(view === "grid" ? "table" : "grid")}
+  >
+    <ArrowsUpDownIcon className="w-5 h-5" />
+    Switch to {view === "grid" ? "Table" : "Grid"} View
+  </button>
+
+  {/* Middle: Search & Filter */}
+  <div className="flex gap-2 items-center w-full md:w-auto">
+    <div className="relative">
+      <MagnifyingGlassIcon className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+      <input
+        type="text"
+        placeholder="Search by Name or ID"
+        className={`border rounded-lg pl-10 pr-4 py-2 shadow-sm focus:outline-blue-500 ${
+          theme === "dark" ? "bg-gray-800 text-white border-gray-600" : "bg-white text-gray-900"
+        }`}
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+    </div>
+    
+    <div className="relative">
+  <AdjustmentsHorizontalIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+  <select
+    className={`border rounded-lg pl-10 pr-4 py-2 shadow-sm focus:outline-blue-500 ${
+      theme === "dark" ? "bg-gray-800 text-white border-gray-600" : "bg-white text-gray-900"
+    }`}
+    value={filterGender}
+    onChange={(e) => setFilterGender(e.target.value)}
+  >
+    <option value="">Filter by Gender</option>
+    <option value="Male">Male</option>
+    <option value="Female">Female</option>
+  </select>
+</div>
+
+  </div>
+
+  {/* Right: Add Patient Button */}
+  <button
+    onClick={navigateToAddPatient}
+    className="flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 shadow-lg transition"
+  >
+    <UserPlusIcon className="w-5 h-5" />
+    Add New Patient
+  </button>
+</div>        {view === "grid" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 gap-y-8">
           {filteredPatients.map((patient) => (
-            <li key={patient._id}>
+            <li key={patient._id} className="list-none">
               <div
-                key={patient._id}
-                className="bg-gradient-to-br from-white to-gray-100 rounded-lg shadow-md p-5 hover:shadow-xl transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                className={`bg-gradient-to-br ${theme === 'dark' ? 'from-gray-800 to-gray-900 text-gray-200' : 'from-white to-gray-100 text-gray-800'} 
+                rounded-lg shadow-lg p-6 hover:shadow-2xl transition duration-200 ease-in-out transform hover:scale-[1.02] cursor-pointer`}
                 onClick={() => handlePatientClick(patient._id)}
               >
+                {/* Name & Age */}
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-xl font-semibold text-gray-800">
-                    {patient.name}
-                  </span>
-                  <span className="text-gray-500">
+                  <span className="text-xl font-semibold">{patient.name}</span>
+                  <span className="text-gray-400">
                     {patient.age ?? calculateAge(patient.dob)} years
                   </span>
                 </div>
-                <p className="text-gray-700 mb-2">{patient.contact}</p>
-                <p className="text-gray-500 text-sm">{patient.gender}</p>
+        
+                {/* Contact */}
+                <p className="text-gray-500 mb-2">{patient.contact}</p>
+        
+                {/* Gender */}
+                <p className="text-sm text-gray-400 capitalize">{patient.gender}</p>
               </div>
             </li>
           ))}
         </div>
+        ):(
+          <table className="table-auto w-full">
+        <thead>
+          <tr>
+            <th className="px-4 py-2">Patient ID</th>
+            <th className="px-4 py-2">Name</th>
+            <th className="px-4 py-2">Gender</th>
+            <th className="px-4 py-2">Age</th>
+            <th className="px-4 py-2">Last Visit</th>
+            <th className="px-4 py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredPatients.map((patient) => (
+            <tr key={patient._id}>
+              <td className="border px-4 py-2">{patient._id}</td>
+              <td className="border px-4 py-2">{patient.name}</td>
+              <td className="border px-4 py-2">{patient.gender}</td>
+              <td className="border px-4 py-2">
+                {patient.age || calculateAge(patient.dob)}
+              </td>
+              <td className="border px-4 py-2">{formatDate(patient.lastVisit)}</td>
+              <td className="border px-4 py-2">
+                <button
+                  onClick={() => handlePatientClick(patient._id)}
+                  className="bg-blue-500 text-white py-2 px-4 rounded"
+                >
+                  View Details
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+        )}
+        
       </div>
 
       {isModalOpen && selectedPatient && (
@@ -350,7 +419,7 @@ setPatients((prevPatients) =>
           onClick={closeModal}
         >
           <div
-            className="modal-container bg-white rounded-lg p-6 shadow-lg max-w-3xl w-full"
+            className={`modal-container ${theme === "dark" ? "bg-gray-800" : "bg-white"} rounded-lg p-6 shadow-lg max-w-3xl w-full`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between">
@@ -390,12 +459,6 @@ setPatients((prevPatients) =>
                     Discharge
                   </button>
                     <button
-                      className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
-                      onClick={handleEditClick}
-                    >
-                      Edit
-                    </button>
-                    <button
                       className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
                       onClick={() => handleGeneratePDF(false)}
                     >
@@ -408,12 +471,22 @@ setPatients((prevPatients) =>
                     >
                       Request Lab Test
                     </button>
-                    <button
+                    {(user?.role === "admin" || user?.role === "doctor") && (
+                      <>
+                      <button
                       className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600"
                       onClick={handleDeleteClick}
                     >
                       {deleting ? "Deleting..." : "Delete"}
                     </button>
+                    <button
+                      className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
+                      onClick={handleEditClick}
+                    >
+                      Edit
+                    </button>
+                    </>
+              )}
                   </div>
                 </>
               ) : (

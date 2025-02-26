@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useCallback } from 'react';
 import { ProductsContext } from '../context/ProductsContext';
 import { useTheme } from '../context/ThemeContext'; // Import theme context
 import ProductForm from '../components/products/ProductForm';
@@ -15,17 +15,18 @@ const Inventory = () => {
   const [filteredProducts, setFilteredProducts] = useState(products);
 
   // Function to handle search filter
-  const handleSearch = (searchTerm: string) => {
+  const handleSearch = useCallback((searchTerm: string) => {
     const filtered = products.filter((product) =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredProducts(filtered);
-  };
+  }, [filtered]);
+
 
   // Use effect to filter products as user types
   useEffect(() => {
     handleSearch(search);
-  }, [search, products]);
+  }, [handleSearch, products]);
 
   const handleButtonSearch = () => {
     handleSearch(search);

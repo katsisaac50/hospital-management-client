@@ -128,6 +128,10 @@ const LabTechnicianPatientPage = () => {
   const handleUpdateStatus = async (event, params) => {
     const newStatus = event.target.value;
     const testId = params.row._id; // Correct ID reference
+    const result = params.row?.result;
+    const doctorId = params.row?.doctorId;
+    console.log('history', testHistory)
+    console.log('row', params.row)
   
     console.log("Updating status for:", testId, "New Status:", newStatus);
   
@@ -141,8 +145,12 @@ const LabTechnicianPatientPage = () => {
     try {
       const response = await axios.put(
         `${API_URL}/update-status/${testId}`,
-        { testStatus: newStatus, user },
-        { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+        { testStatus: newStatus, 
+          user,
+        result,
+      doctorId },
+        { headers: { "Content-Type": "application/json", 
+          Authorization: `Bearer ${token}` } }
       );
   
       if (response.status >= 200 && response.status < 300) {
@@ -211,8 +219,9 @@ const LabTechnicianPatientPage = () => {
     let filtered = testHistory;
 
     if (searchTerm) {
+
       filtered = filtered.filter((test) =>
-        test.testId.testName.toLowerCase().includes(searchTerm.toLowerCase())
+        (test?.testId?.testName||test?.testName).toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -233,7 +242,7 @@ const LabTechnicianPatientPage = () => {
         field: "testId.testName",
         headerName: "Test Name",
         flex: 1,
-        valueGetter: (value, row) => `${row.testId.testName || "N/A"}`,
+        valueGetter: (value, row) =>  `${row.testId?.testName||row?.testName || "N/A"}`,
       },
       {
         field: "result",
@@ -245,7 +254,7 @@ const LabTechnicianPatientPage = () => {
         field: "testId.referenceValue",
         headerName: "Reference",
         flex: 1,
-        valueGetter: (value, row) => `${row.testId.referenceValue || "N/A"}`,
+        valueGetter: (value, row) => `${row.testId?.referenceValue || "N/A"}`,
       },
       {
         field: "testStatus",
@@ -258,6 +267,7 @@ const LabTechnicianPatientPage = () => {
           onChange={(e) => handleUpdateStatus(e, params)}
             fullWidth
           >
+            <MenuItem value="requested">requested</MenuItem>
             <MenuItem value="pending">Pending</MenuItem>
             <MenuItem value="in_progress">In Progress</MenuItem>
             <MenuItem value="completed">Completed</MenuItem>
@@ -269,7 +279,7 @@ const LabTechnicianPatientPage = () => {
         headerName: "Date",
         flex: 1,
         valueFormatter: (value, row) =>
-          row.date ? dayjs(row.date).format("YYYY-MM-DD") : "N/A",
+          row.date ? dayjs(row?.date).format("YYYY-MM-DD") : "N/A",
       },
       {
         field: "testNotes",
@@ -380,15 +390,15 @@ const LabTechnicianPatientPage = () => {
         </Card>
          {/* Modal for Adding New Test */}
          <AddTestResultModal
-  isOpen={isModalOpen}
-  onClose={() => setIsModalOpen(false)}
-  availableTests={availableTests}
-  newTest={newTest}
-  setNewTest={setNewTest}
-  newResult={newResult}
-  setNewResult={setNewResult}
-  addTestMutation={addTestMutation}
-/>
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          availableTests={availableTests}
+          newTest={newTest}
+          setNewTest={setNewTest}
+          newResult={newResult}
+          setNewResult={setNewResult}
+          addTestMutation={addTestMutation}
+        />
       </div>
     </LocalizationProvider>
   );

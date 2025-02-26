@@ -22,7 +22,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const DischargeForm = () => {
   const router = useRouter();
   const { patientId } = router.query;
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const [formData, setFormData] = useState([]);
   const [selectedForm, setSelectedForm] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
