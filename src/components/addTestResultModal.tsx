@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { UseMutationResult } from '@tanstack/react-query';
 import {
   Dialog,
   DialogTitle,
@@ -14,7 +15,22 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 
-const AddTestResultModal = ({
+interface AddTestResultModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  availableTests: Test[];
+  newTest: Test | null;
+  setNewTest: (test: Test | null) => void;
+  newResult: string;
+  setNewResult: React.Dispatch<React.SetStateAction<string>>;
+  addTestMutation: UseMutationResult<void, Error, void>; 
+}interface Test {
+  _id: string;
+  testName: string;
+  category?: string;
+};
+
+const AddTestResultModal: React.FC<AddTestResultModalProps> = ({
   isOpen,
   onClose,
   availableTests,
@@ -24,6 +40,7 @@ const AddTestResultModal = ({
   setNewResult,
   addTestMutation,
 }) => {
+
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
@@ -56,12 +73,15 @@ const AddTestResultModal = ({
             <InputLabel>Select Test</InputLabel>
             <Select
               value={newTest}
-              onChange={(e) => setNewTest(e.target.value)}
+              onChange={(e) => {
+                const selectedTest = availableTests.find(test => test._id === e.target.value);
+                setNewTest(selectedTest || null); // Only set the test if it's found, otherwise set to null
+              }}
               variant="outlined"
               sx={{ borderRadius: "8px" }}
             >
-              {availableTests.map((test) => (
-                <MenuItem key={test._id} value={test._id}>
+              {availableTests.map((test, index) => (
+                <MenuItem key={`${test._id}-${index}`} {...test} value={test._id}>
                   {test.testName}
                 </MenuItem>
               ))}

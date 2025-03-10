@@ -1,23 +1,19 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import type { UserOptions as AutoTableOptions } from 'jspdf-autotable';
 import { calculateAge, formatDate } from '../lib/utils';
 import { PDFHelper, PDFSection, Patient } from '../lib/interfaces';
 
 declare module 'jspdf' {
     interface jsPDF {
-        autoTable: (options: any) => void;
-    }
-}
-
-declare module 'jspdf' {
-    interface jsPDF {
+        autoTable: (options: AutoTableOptions) => void;
         lastAutoTable?: { finalY: number };
     }
 }
 
-
-(jsPDF as any).prototype.autoTable = autoTable;
-(jsPDF as any).prototype.lastAutoTable = autoTable;
+jsPDF.prototype.autoTable = function(options: AutoTableOptions) {
+    autoTable(this, options);
+};
 
 class PDFGenerator implements PDFHelper {
     doc: jsPDF;
@@ -65,7 +61,7 @@ class PDFGenerator implements PDFHelper {
         this.currentY += yIncrement;
     }
 
-    addTable(tableData: any[]): void {
+    addTable(tableData: [string | number][][]): void {
         this.checkNewPage(60);
         this.doc.autoTable({
             startY: this.currentY,
@@ -74,16 +70,14 @@ class PDFGenerator implements PDFHelper {
             theme: 'grid',
             margin: { top: 10 },
             columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 40 }, 2: { cellWidth: 60 } },
-        });
+        } as AutoTableOptions);
 
         if (this.doc.lastAutoTable) {
             this.currentY = this.doc.lastAutoTable.finalY + 10;
         } else {
-            // Handle the case when lastAutoTable is undefined
             this.currentY = 10; // Set a default value or handle accordingly
         }
     }
-
     addSection(section: PDFSection): void {
         this.addText(section.title, 10, true);
         if (Array.isArray(section.content)) {
@@ -109,7 +103,7 @@ const generatePDF = (selectedPatient: Patient, preview = false): void => {
             `Gender: ${selectedPatient.gender}`,
             `Contact: ${selectedPatient.contact}`,
             `Address: ${selectedPatient.address}`,
-            `Emergency Contact: ${selectedPatient.emergencyContact || 'N/A'}`
+            `Emergency Contact: ${selectedPatient.emergencyContact || 'N/A'}`,
         ]
     });
 
@@ -119,27 +113,26 @@ const generatePDF = (selectedPatient: Patient, preview = false): void => {
             `Physical Examination: ${selectedPatient.physicalExamination || 'N/A'}`,
             `Diagnosis: ${selectedPatient.currentDiagnosis || 'N/A'}`,
             `Treatment: ${selectedPatient.treatment || 'N/A'}`,
-            `Medical History: ${selectedPatient.medicalHistory || 'N/A'}`
+            `Medical History: ${selectedPatient.medicalHistory || 'N/A'}`,
         ]
     });
 
     pdf.addSection({
         title: 'Laboratory Information',
-        content: ''
+        content: ['']
     });
     
     const labResults = selectedPatient.laboratoryResults?.map(test => [test.name, test.result, test.reference]) || [['No Test Available', '-', '-']];
-    pdf.addTable([['Test Name', 'Result', 'Reference'], ...labResults]);
+    pdf.addTable([['Test Name', 'Result', 'Reference'], ...labResults] as unknown as [string | number][][]);
 
-    pdf.addSection({ title: 'Medication', content: `Current Medications: ${selectedPatient.medications || 'N/A'}` });
-    pdf.addSection({ title: 'Allergies', content: `Known Allergies: ${selectedPatient.allergies || 'N/A'}` });
-    pdf.addSection({ title: 'Follow-up Instructions', content: `Instructions: ${selectedPatient.followUpInstructions || 'N/A'}` });
+    pdf.addSection({ title: 'Medication', content: [`Current Medications: ${selectedPatient.medications || 'N/A'}`] });
+    pdf.addSection({ title: 'Allergies', content: [`Known Allergies: ${selectedPatient.allergies || 'N/A'}`] });
+    pdf.addSection({ title: 'Follow-up Instructions', content: [`Instructions: ${selectedPatient.followUpInstructions || 'N/A'}`] });
 
     if (preview) {
-        pdf.doc.output('dataurlnewwindow');
+        window.open(pdf.doc.output('bloburl')); // ✅ Fixed preview mode
     } else {
         pdf.doc.save(`${selectedPatient.name}_Medical_Form.pdf`);
     }
 };
-
 export default generatePDF;

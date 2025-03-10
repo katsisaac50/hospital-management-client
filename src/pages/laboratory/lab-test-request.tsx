@@ -18,7 +18,7 @@ const testOptions = ["Blood Pressure", "Glucose Level", "Cholesterol", "Hemoglob
 
 const LabRequestForm = ({ open, onClose, onSubmit, selectedPatient }) => {
   const { theme } = useTheme();
-  const { user, setUser } = useAppContext();
+  const { user } = useAppContext();
   console.log(selectedPatient?._id)
   const [formData, setFormData] = useState({
     testName: "",

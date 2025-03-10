@@ -1,7 +1,8 @@
 // src/components/ui/input.tsx
-import { InputHTMLAttributes } from 'react';
-
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {}
+ import { InputHTMLAttributes } from 'react';
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  // Add any custom props here if needed
+};
 
 const Input: React.FC<InputProps> = ({ className, ...props }) => {
   return (

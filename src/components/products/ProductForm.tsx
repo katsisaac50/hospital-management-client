@@ -1,11 +1,13 @@
-import { useState, useContext } from 'react';
-import { ProductsContext } from '../../context/ProductsContext';
+import { useState } from 'react';
+import { useProductsContext } from '../../context/ProductsContext';
 import { addProduct } from '../../services/productsService';
 import { AxiosError } from 'axios';
 import { useTheme } from '../../context/ThemeContext'; // Import theme context
+import { Product } from './../../lib/interfaces';
 
 const ProductForm = () => {
-  const { setProducts } = useContext(ProductsContext);
+  const { setProducts } = useProductsContext();
+
   const { theme } = useTheme(); // Get current theme
   const [form, setForm] = useState({ name: '', category: 'medicine', quantity: 0, price: 0 });
 
@@ -13,7 +15,7 @@ const ProductForm = () => {
     e.preventDefault();
     try {
       const newProduct = await addProduct(form);
-      setProducts((prev: any) => [...prev, newProduct]);
+      setProducts((prev: Product[]) => [...prev, newProduct]);
     } catch (error) {
       const err = error as AxiosError;
       console.error('Failed to add product:', err.response?.data || err.message);

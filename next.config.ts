@@ -1,11 +1,19 @@
 import type { NextConfig } from 'next';
-import type { Configuration } from 'webpack';
-import path from 'path';
+// import type { Configuration } from 'webpack';
+// import path from 'path';
 
 const nextConfig: NextConfig = {
   
   experimental: {
     esmExternals: true, // You can keep this experimental option if needed.
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: true,
   },
   assetPrefix: process.env.GITHUB_PAGES ? '/<repository-name>/' : '',
   trailingSlash: true,

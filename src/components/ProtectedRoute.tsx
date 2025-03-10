@@ -1,18 +1,30 @@
 import { useAppContext } from "../context/AppContext";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { ReactNode, useEffect } from "react";
 
-const ProtectedRoute = ({ allowedRoles, children }) => {
-  const { user } = useAppContext();
+// Define the shape of your user object
+interface User {
+  role: string;
+  // Add other user properties as needed
+}
+
+// Define the props for ProtectedRoute
+interface ProtectedRouteProps {
+  allowedRoles: string[];
+  children: ReactNode;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles, children }) => {
+  const { user } = useAppContext() as { user: User | null }; // Ensure user is typed correctly
   const router = useRouter();
 
   useEffect(() => {
     if (user && !allowedRoles.includes(user.role)) {
       router.push("/dashboard");
     }
-  }, [user, router]);
+  }, [user, router, allowedRoles]);
 
-  return user ? children : null;
+  return user ? <>{children}</> : null;
 };
 
 export default ProtectedRoute;

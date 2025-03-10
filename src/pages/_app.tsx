@@ -73,28 +73,16 @@ const handleApiError = (error: unknown) => {
   }
 };
 
-// Create a QueryClient instance
-// const queryClient = new QueryClient();
-
 // Create a single instance of QueryClient outside the component
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 2, // Retry failed queries twice
-      onError: handleApiError,
-      // onError: (error: unknown) => {
-      //   console.error("Query Error:", error);
-      //   toast.error('An error occurred while fetching data.');
-      // },
-    },
-    mutations: {
-      onError: handleApiError,
-      // onError: (error: unknown) => {
-      //   console.error("Mutation Error:", error);
-      //   toast.error('An error occurred while processing your request.');
-      // },
-    },
+const queryClient = new QueryClient();
+
+queryClient.setDefaultOptions({
+  queries: {
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2, // Retry failed queries twice
+  },
+  mutations: {
+    onError: handleApiError,
   },
 });
 

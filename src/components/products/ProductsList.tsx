@@ -1,16 +1,7 @@
 import { useContext } from 'react';
-import { ProductsContext } from '../../context/ProductsContext';
+import { useProductsContext } from '../../context/ProductsContext';
 import { useTheme } from '../../context/ThemeContext'; // Import theme context
-
-// Define the expected structure of a product
-interface Product {
-  _id: string;
-  name: string;
-  category: string;
-  quantity: number;
-  price: number;
-  batchNumber?: string; // Optional in case some products don't have it
-}
+import { Product } from './../../lib/interfaces';
 
 // Define the type for props
 interface ProductsListProps {
@@ -18,7 +9,7 @@ interface ProductsListProps {
 }
 
 const ProductsList: React.FC<ProductsListProps> = ({ products }) => {
-  const { products: contextProducts } = useContext(ProductsContext);
+  const { products: contextProducts } = useProductsContext();
   const { theme } = useTheme(); // Get the current theme
 
   // Use provided products or fallback to context products

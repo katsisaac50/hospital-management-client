@@ -91,7 +91,7 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
   const router = useRouter();
   const { user } = useAppContext();
   const [openTest, setOpenTest] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const [view, setView] = useState("grid");
 
   const handleTestOpen = () =>setOpenTest(true);

@@ -89,22 +89,20 @@ const Dashboard: React.FC = () => {
     // if (userRole === "labTechnician" && router.pathname !== "/reports") {
     //   router.replace("/reports");
     // }
-  }, [router.pathname]);
+  }, [router, userRole]);
   
+  // const fetchHealthData = (date: Date) => {
+  //   // This function can fetch health data related to the selected date
+  //   // You can display appointments, reports, or reminders related to that date.
+  // };
 
   const handleDateChange = (value: Date | [Date, Date] | null) => {
     if (value instanceof Date || Array.isArray(value)) {
         setSelectedDate(value as Date | [Date, Date]); // Type assertion
          // Fetch health events for the selected date
-    fetchHealthData(value);
+    // fetchHealthData(value);
     }
 };
-
-// const fetchHealthData = (date: Date) => {
-//   // This function can fetch health data related to the selected date
-//   // You can display appointments, reports, or reminders related to that date.
-// };
-
 
   // Handle logout functionality
   const handleLogout = () => {
@@ -119,13 +117,13 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
       <aside className="w-16 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 shadow-xl flex flex-col justify-between items-center">
-        <div className="mb-4">
+        <div className="mb-4 w-30 h-30">
           <Image
-            src="/hospital-logo.jpg"
+            src="/assets/hospital-icon.png"
             alt="Hospital Logo"
-            width={36}
-            height={36}
-            className="rounded-full shadow-md"
+            width={64}
+            height={64}
+            className="rounded-full shadow-md hover:shadow-lg transition-shadow duration-300 bg-white"
           />
         </div>
 

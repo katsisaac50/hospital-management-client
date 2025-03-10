@@ -20,13 +20,13 @@ const Inventory = () => {
       product.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredProducts(filtered);
-  }, [filtered]);
+  }, [products]);
 
 
   // Use effect to filter products as user types
   useEffect(() => {
     handleSearch(search);
-  }, [handleSearch, products]);
+  }, [search, handleSearch, products]);
 
   const handleButtonSearch = () => {
     handleSearch(search);

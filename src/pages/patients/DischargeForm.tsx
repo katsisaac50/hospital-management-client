@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useTheme } from '../../context/ThemeContext';
@@ -17,27 +17,32 @@ import {
 // import { useTheme } from "@mui/material/styles";
 import DischargeFormDialog from "../../components/DischargeFormDialog";
 
+interface DischargeForm {
+  _id?: string;
+  finalDiagnosis: string;
+  medicationsOnDischarge: string[];
+  followUpAppointments: { date: string; reason: string }[];
+  dischargeInstructions: string;
+  doctorNotes: string;
+  createdAt?: string;
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const DischargeForm = () => {
   const router = useRouter();
   const { patientId } = router.query;
   const { theme } = useTheme();
-  const [formData, setFormData] = useState([]);
-  const [selectedForm, setSelectedForm] = useState(null);
+  const [formData, setFormData] = useState<DischargeForm[]>([]);
+  const [selectedForm, setSelectedForm] = useState<DischargeForm | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const isDarkMode = theme === "dark";
 
-  useEffect(() => {
-    if (!patientId) return;
-    fetchDischargeForms();
-  }, [patientId]);
-
-  const fetchDischargeForms = async () => {
+  const fetchDischargeForms = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await axios.get(`${API_URL}/discharge/${patientId}`);
@@ -50,7 +55,12 @@ const DischargeForm = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [patientId, setError]);
+
+  useEffect(() => {
+    if (!patientId) return;
+    fetchDischargeForms();
+  }, [patientId, fetchDischargeForms]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -59,7 +69,7 @@ const DischargeForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSaving(true);
+    setIsDeleting(true);
    
     try {
       if (selectedForm?._id) {
@@ -73,7 +83,7 @@ const DischargeForm = () => {
     } catch (error) {
       console.error("Save error:", error);
     } finally {
-      setSaving(false);
+      setIsDeleting(false);
     }
   };
 
@@ -92,6 +102,7 @@ const DischargeForm = () => {
       fetchDischargeForms();
       setIsEditing(false);
     } catch (error) {
+      console.log(error);
       alert("Failed to update form.");
     }
   };
@@ -104,6 +115,7 @@ const DischargeForm = () => {
       alert("Form deleted!");
       fetchDischargeForms();
     } catch (error) {
+      console.log(error);
       alert("Failed to delete form.");
     }
   };
@@ -119,6 +131,7 @@ const DischargeForm = () => {
     setSelectedIndex(null);
     setIsEditing(true);
   };
+  
 
   if (loading) return <Box sx={{ textAlign: "center", mt: 4 }}><CircularProgress /></Box>;
 
@@ -152,7 +165,7 @@ Discharge Section
           borderRadius: 2,
           color: isDarkMode ? "#E0E0E0" : "#333",
           "& .MuiOutlinedInput-notchedOutline": {
-            borderColor: isDarkMode ? "#444" : "#CCC"
+            borderColor: isDarkMode ? "#444" : "#CCC "
           },
           "&:hover .MuiOutlinedInput-notchedOutline": {
             borderColor: "primary.main"
@@ -200,6 +213,7 @@ Discharge Section
         handleSubmit = {handleSubmit}
         handleUpdate = {handleUpdate}
         handleDelete = {() => handleDelete(selectedIndex)}
+        isDeleting = {isDeleting}
         />
       )}
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useRouter } from "next/router";
@@ -20,30 +20,31 @@ import { Edit, Delete } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs from "dayjs";
+import { SelectChangeEvent } from "@mui/material";
+import dayjs, { Dayjs } from "dayjs";
 import { toast } from "react-toastify";
 import AddTestResultModal from "./../../components/addTestResultModal";
 import { validateTestChange } from "../../../utils/validation";
-
+import {TestHistoryParams} from "../../lib/interfaces";
+import { GridColDef, GridValueGetterParams } from "@mui/x-data-grid";
 
 const LabTechnicianPatientPage = () => {
   const router = useRouter();
   const { id } = router.query;
   const queryClient = useQueryClient();
-  const { user, setUser } = useAppContext();
+  const { user} = useAppContext();
   const [token, setToken] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newTest, setNewTest] = useState("");
-  const [newResult, setNewResult] = useState("");
+  const [newTest, setNewTest] = useState<string>("");
+  const [newResult, setNewResult] = useState<string>("");
   const [availableTests, setAvailableTests] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-  const [tests, setTests] = useState([]);
+  const [startDate, setStartDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
+  const [tests, setTests] = useState<{ _id: string; testStatus?: string }[]>([]);
   const [originalTestHistory, setOriginalTestHistory] = useState([]);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
 
   useEffect(() => {
     if (!id) return;
@@ -96,13 +97,20 @@ const LabTechnicianPatientPage = () => {
     const fetchTests = async () => {
       try {
         const { data } = await axios.get(`${API_URL}/medicaltests`);
-        setAvailableTests(data);
+        if (data) {
+          setAvailableTests(data); // Set the state with the fetched data
+        }
       } catch (error) {
+        console.error("Error fetching tests:", error);
         toast.error("Failed to fetch test list");
       }
     };
     fetchTests();
   }, []);
+  // Handle search
+  // const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   setSearchTerm(event.target.value);
+  // };
 
   // Mutation for adding a new test result
   const addTestMutation = useMutation({
@@ -121,41 +129,46 @@ const LabTechnicianPatientPage = () => {
       setIsModalOpen(false);
       setNewTest("");
       setNewResult("");
-      queryClient.invalidateQueries(["testHistory", id]);
+      queryClient.invalidateQueries({ queryKey: ["testHistory", id] });
+
     },
   });
 
-  const handleUpdateStatus = async (event, params) => {
+  // Memoize handleUpdateStatus using useCallback
+  const handleUpdateStatus = useCallback(async (event: SelectChangeEvent<any>, params: any) =>  {
+    console.log("status", event)
+    if (!params?.row) {
+      console.error("Params.row is undefined");
+      return;
+    }
+  
     const newStatus = event.target.value;
     const testId = params.row._id; // Correct ID reference
     const result = params.row?.result;
     const doctorId = params.row?.doctorId;
-    console.log('history', testHistory)
-    console.log('row', params.row)
   
-    console.log("Updating status for:", testId, "New Status:", newStatus);
+    if (!testId) {
+      console.error("Test ID is missing");
+      return;
+    }
   
     // Optimistic update
     setTests((prevTests) =>
-      prevTests.map((test) =>
-        test._id === testId ? { ...test, testStatus: newStatus } : test
-      )
-    );
+  prevTests.map((test) =>
+    test._id === testId ? { ...test, testStatus: newStatus } : test
+  )
+);
   
     try {
       const response = await axios.put(
         `${API_URL}/update-status/${testId}`,
-        { testStatus: newStatus, 
-          user,
-        result,
-      doctorId },
-        { headers: { "Content-Type": "application/json", 
-          Authorization: `Bearer ${token}` } }
+        { testStatus: newStatus, result, doctorId, user },
+        { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
       );
   
       if (response.status >= 200 && response.status < 300) {
         toast.success("Status updated successfully!");
-        queryClient.invalidateQueries(["testHistory", id]); // Refresh data
+        queryClient.invalidateQueries({ queryKey: ["testHistory", id] });
       } else {
         throw new Error("Failed to update status");
       }
@@ -165,17 +178,18 @@ const LabTechnicianPatientPage = () => {
   
       // Rollback if request fails
       setTests((prevTests) =>
-        prevTests.map((test) =>
-          test._id === testId ? { ...test, testStatus: params.row.testStatus } : test
-        )
-      );
+  prevTests.map((test) =>
+    test._id === testId ? { ...test, testStatus: newStatus } : test
+  )
+);
     }
-  };
+  }, [API_URL, token, user, queryClient, id, setTests]);
+  
   
 
   // Mutation for updating a test result
   const updateTestMutation = useMutation({
-    mutationFn: async (params) => {
+    mutationFn: async (params: TestHistoryParams) => {
       console.log('para', params)
 
   if (!validateTestChange(originalTestHistory, params.row.result, params.row._id)) return;
@@ -188,7 +202,8 @@ const LabTechnicianPatientPage = () => {
         );
   
         if (response.status >= 200 && response.status < 300) {
-          queryClient.invalidateQueries(["testHistory", id]);
+          queryClient.invalidateQueries({ queryKey: ["testHistory", id] });
+
           toast.success("Test result updated!");
         } else {
           throw new Error("Failed to update test result.");
@@ -203,13 +218,13 @@ const LabTechnicianPatientPage = () => {
 
   // Mutation for deleting a test result
   const deleteTestMutation = useMutation({
-    mutationFn: async (params) => {
-      const testId = params.row._id;
+    mutationFn: async (params: any) => {
+      const testId = params?.row._id;
 
       await axios.delete(`${API_URL}/medicalTestResults/${testId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      queryClient.invalidateQueries(["testHistory", id]);
+      queryClient.invalidateQueries({ queryKey: ["testHistory", id] });
       toast.success("Test result deleted!");
     },
   });
@@ -220,14 +235,14 @@ const LabTechnicianPatientPage = () => {
 
     if (searchTerm) {
 
-      filtered = filtered.filter((test) =>
+      filtered = filtered.filter((test: { testId: { testName: any; }; testName: any; }) =>
         (test?.testId?.testName||test?.testName).toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     if (startDate && endDate) {
       filtered = filtered.filter(
-        (test) =>
+        (test: { collectionDate: string | number | dayjs.Dayjs | Date | null | undefined; }) =>
           dayjs(test.collectionDate).isAfter(dayjs(startDate)) &&
           dayjs(test.collectionDate).isBefore(dayjs(endDate))
       );
@@ -239,10 +254,14 @@ const LabTechnicianPatientPage = () => {
   const columns = useMemo(
     () => [
       {
-        field: "testId.testName",
+        field: "testId",
         headerName: "Test Name",
         flex: 1,
-        valueGetter: (value, row) =>  `${row.testId?.testName||row?.testName || "N/A"}`,
+        valueGetter: (params: GridValueGetterParams<any, any>) => {
+          const row = params || {}; // ✅ Ensure row exists
+          console.log("tem13", row);
+          return `${row.testName|| "N/A"} (${row.referenceValue|| "N/A"})`;
+        },
       },
       {
         field: "result",
@@ -250,22 +269,27 @@ const LabTechnicianPatientPage = () => {
         flex: 1,
         editable: true,
       },
-      {
-        field: "testId.referenceValue",
-        headerName: "Reference",
-        flex: 1,
-        valueGetter: (value, row) => `${row.testId?.referenceValue || "N/A"}`,
-      },
+      // {
+      //   field: "referenceValue",
+      //   headerName: "Reference",
+      //   flex: 1,
+      //   valueGetter: (params: GridValueGetterParams<any, any>) => {
+      //     console.log("yem",params);
+      //     const row = params || {}; // ✅ Ensure row exists
+      //     return `${row?.referenceValue || "N/A"}`;
+      //   },
+      // },
       {
         field: "testStatus",
         headerName: "Status",
         flex: 1,
         editable: true, 
-        renderCell: (params) => (
+        type: "singleSelect",
+        renderCell: (params: { row: { testStatus: any; }; }) => (
           <Select
-          value={params.row.testStatus}
-          onChange={(e) => handleUpdateStatus(e, params)}
-            fullWidth
+             value={params?.row?.testStatus || ""}
+             onChange={(e) => handleUpdateStatus(e, params)}
+             fullWidth
           >
             <MenuItem value="requested">requested</MenuItem>
             <MenuItem value="pending">Pending</MenuItem>
@@ -278,8 +302,10 @@ const LabTechnicianPatientPage = () => {
         field: "date",
         headerName: "Date",
         flex: 1,
-        valueFormatter: (value, row) =>
-          row.date ? dayjs(row?.date).format("YYYY-MM-DD") : "N/A",
+        valueFormatter: (params: GridValueGetterParams<any, any>) => {
+          const row = params|| "N/A"; // ✅ Ensure row exists
+          return row? dayjs(row).format("YYYY-MM-DD") : "N/A";
+        },
       },
       {
         field: "testNotes",
@@ -295,23 +321,21 @@ const LabTechnicianPatientPage = () => {
         field: "actions",
         headerName: "Actions",
         flex: 1,
-        renderCell: (params) => (
+        renderCell: (params: TestHistoryParams) => (
           <>
             <IconButton onClick={() => updateTestMutation.mutate(params)} color="primary">
               <Edit />
             </IconButton>
-            <IconButton
-              onClick={() => deleteTestMutation.mutate(params)}
-              color="secondary"
-            >
+            <IconButton onClick={() => deleteTestMutation.mutate(params)} color="secondary">
               <Delete />
             </IconButton>
           </>
         ),
       },
     ],
-    [deleteTestMutation]
-  );
+    [deleteTestMutation, handleUpdateStatus, updateTestMutation]
+  );  
+
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -380,7 +404,7 @@ const LabTechnicianPatientPage = () => {
                 pagination
                 paginationMode="server"
                 rowCount={filteredTestHistory?.length ?? 0}
-                getRowId={(row) => row._id}
+                getRowId={(row:any) => row._id}
                 columns={columns}
                 pageSize={10}
                 autoHeight
@@ -394,7 +418,7 @@ const LabTechnicianPatientPage = () => {
           onClose={() => setIsModalOpen(false)}
           availableTests={availableTests}
           newTest={newTest}
-          setNewTest={setNewTest}
+          setNewTest={(test) => setNewTest(test?.testName || "")}
           newResult={newResult}
           setNewResult={setNewResult}
           addTestMutation={addTestMutation}

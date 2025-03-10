@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { ProductsProvider } from "./ProductsContext";
 
 interface User {
+  _id: string;
   username: string;
   role: "admin" | "doctor" | "labTechnician" | "guest";
 }

@@ -37,12 +37,16 @@ const AddPatientForm = () => {
     return match ? match[2] : null;
   };
 
-  // Set up axios-retry
-  axiosRetry(axios, {
-    retries: 3, // Number of retries
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 3000), // Exponential backoff
-    shouldRetry: (error) => error.response && error.response.status >= 500, // Retry on server errors
-  });
+  const shouldRetry = (error: any) => {
+    const { config, response } = error;
+    
+    // Retry if the request hasn't reached the maximum retry count
+    // and if the response status is 5xx (server error)
+    const retryCount = config['axios-retry']?.retryCount || 0;
+    return retryCount < 3 && response?.status >= 500 && response?.status < 600;
+  };
+  // Apply axios-retry with custom shouldRetry function
+axiosRetry(axios, { retryCondition: shouldRetry });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
