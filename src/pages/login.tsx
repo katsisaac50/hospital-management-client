@@ -37,8 +37,10 @@ const Login = () => {
     }
   
     setLoading(true);
+    const url = `${API_URL}/auth/login`;
+    console.log("Sending request to:", url);
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, { email, password });
+      const response = await axios.post(url, { email, password });
   
       document.cookie = `authToken=${response.data.token}; path=/; secure; samesite=strict;`;
   
