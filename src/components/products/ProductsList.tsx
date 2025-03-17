@@ -2,15 +2,18 @@ import { useContext } from 'react';
 import { useProductsContext } from '../../context/ProductsContext';
 import { useTheme } from '../../context/ThemeContext'; // Import theme context
 import { Product } from './../../lib/interfaces';
+import Button from '../ui/button';
+import { useAppContext } from '../../context/AppContext';
 
 // Define the type for props
 interface ProductsListProps {
   products?: Product[]; // Optional because we fall back to context products
 }
 
-const ProductsList: React.FC<ProductsListProps> = ({ products }) => {
+const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => {
   const { products: contextProducts } = useProductsContext();
   const { theme } = useTheme(); // Get the current theme
+  const { user } = useAppContext();
 
   // Use provided products or fallback to context products
   const productItems = products && products.length > 0 ? products : contextProducts;
@@ -19,31 +22,44 @@ const ProductsList: React.FC<ProductsListProps> = ({ products }) => {
     <div 
   className={`p-6 rounded-lg shadow-lg transition-all duration-300 ${theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-white text-black'}`}
 >
-  <table className="w-full border-collapse">
-    <thead>
-      <tr className={`${theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-black'}`}>
-        <th className="p-3 border-b">Name</th>
-        <th className="p-3 border-b">Category</th>
-        <th className="p-3 border-b">Quantity</th>
-        <th className="p-3 border-b">Price</th>
-        <th className="p-3 border-b">Batch No.</th>
+  
+<table className="w-full border-collapse">
+  <thead>
+    <tr className={`${theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-black'}`}>
+      <th className="p-3 border-b">Name</th>
+      <th className="p-3 border-b">Category</th>
+      <th className="p-3 border-b">Quantity</th>
+      <th className="p-3 border-b">Price</th>
+      <th className="p-3 border-b">Batch No.</th>
+      {['admin', 'pharmacist', 'doctor'].includes(user?.role)  && <th className="p-3 border-b">Action</th>}{/* Added column for actions */}
+    </tr>
+  </thead>
+  <tbody>
+    {productItems.map((product: Product) => (
+      <tr
+        key={product._id}
+        className={`border-y transition-all duration-200 ${theme === 'dark' ? 'hover:bg-gray-600' : 'hover:bg-gray-300'}`}
+      >
+        <td className="p-3">{product.name}</td>
+        <td className="p-3">{product.category}</td>
+        <td className="p-3">{product.quantity}</td>
+        <td className="p-3">{product.price}</td>
+        <td className="p-3">{product.batchNumber || 'N/A'}</td>
+        <td className="p-3">
+          {/* Show the button only for authorized roles */}
+          {['admin', 'pharmacist', 'doctor'].includes(user?.role) && (
+            <Button
+              onClick={() => onDispense(product)}
+              className="bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded"
+            >
+              Dispense
+            </Button>
+          )}
+        </td>
       </tr>
-    </thead>
-    <tbody>
-      {productItems.map((product: Product) => (
-        <tr
-          key={product._id}
-          className={`border-y transition-all duration-200 ${theme === 'dark' ? 'hover:bg-gray-600' : 'hover:bg-gray-300'}`}
-        >
-          <td className="p-3">{product.name}</td>
-          <td className="p-3">{product.category}</td>
-          <td className="p-3">{product.quantity}</td>
-          <td className="p-3">{product.price}</td>
-          <td className="p-3">{product.batchNumber || 'N/A'}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
+    ))}
+  </tbody>
+</table>
 </div>
 
   );

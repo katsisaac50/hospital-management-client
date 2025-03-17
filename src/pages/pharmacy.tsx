@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect, useMemo } from 'react';
 import { ProductsContext } from '../context/ProductsContext';
 import { useTheme } from '../context/ThemeContext';
+import DispenseModal from '../components/products/DispenseModal';
 import ProductForm from '../components/products/ProductForm';
 import ProductsList from '../components/products/ProductsList';
 import Link from 'next/link';
@@ -8,31 +9,68 @@ import Input from '../components/ui/input';
 import Button from '../components/ui/button';
 import { Search } from 'lucide-react';
 
-const Inventory = () => {
-  const { products = [] } = useContext(ProductsContext); // Avoid undefined
-  const { theme } = useTheme();
-  const [search, setSearch] = useState('');
+// Ensure Product type is defined or imported
+interface Product {
+  _id: string;
+  name: string;
+  quantity: number;
+}
 
-  // UseMemo for filtering efficiency
+const Inventory = () => {
+  const { products = [], setProducts } = useContext(ProductsContext); // Avoid undefined
+  const { theme } = useTheme();
+  const [search, setSearch] = useState(''); // Ensure search is defined
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const handleOpenModal = (product: Product) => {
+    setSelectedProduct(product);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedProduct(null);
+  };
+
+  const handleDispense = (quantity: number) => {
+    if (!selectedProduct) return;
+
+    if (selectedProduct.quantity < quantity) {
+      alert("Not enough stock available!");
+      return;
+    }
+
+    const updatedProducts = products.map((product) =>
+      product._id === selectedProduct._id
+        ? { ...product, quantity: product.quantity - quantity }
+        : product
+    );
+
+    setProducts(updatedProducts);
+  };
+
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(handler);
+  }, [search]);
+
   const filteredProducts = useMemo(() => {
     return products.filter((product) =>
-      product.name.toLowerCase().includes(search.toLowerCase())
+      product.name.toLowerCase().includes(debouncedSearch.toLowerCase())
     );
-  }, [search, products]);
+  }, [debouncedSearch, products]);
 
   return (
-    <div
-      className={`p-8 min-h-screen ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'}`}
-    >
+    <div className={`p-8 min-h-screen ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'}`}>
       {/* Header */}
       <header className="flex justify-between items-center mb-6">
         <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-700'}`}>
           Pharmacy Inventory
         </h1>
-        <Link href="/dashboard" passHref>
-          <Button
-            className={`${theme === 'dark' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
-          >
+        <Link href="/dashboard">
+          <Button className={`${theme === 'dark' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-600 hover:bg-blue-700'} text-white`}>
             Back to Dashboard
           </Button>
         </Link>
@@ -50,10 +88,7 @@ const Inventory = () => {
               theme === 'dark' ? 'bg-gray-800 border-gray-600 text-white focus:ring-blue-400' : 'bg-white border-gray-300 text-black focus:ring-blue-500'
             }`}
           />
-          <Search
-            className={`absolute right-3 top-2.5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}
-            size={20}
-          />
+          <Search className={`absolute right-3 top-2.5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} size={20} />
         </div>
       </div>
 
@@ -65,8 +100,24 @@ const Inventory = () => {
 
       <section className={`p-6 rounded-lg shadow-lg ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>
         <h3 className="text-lg font-semibold mb-4">Inventory List</h3>
-        <ProductsList products={filteredProducts} />
+        {filteredProducts.length === 0 ? (
+          <p className="text-center text-gray-500">No products found.</p>
+        ) : (
+          <ProductsList products={filteredProducts} onDispense={handleOpenModal} />
+        )}
       </section>
+
+      {/* Modal for Dispensing */}
+      {showModal && selectedProduct && (
+        <DispenseModal
+          productId={selectedProduct._id}
+          productName={selectedProduct.name}
+          productQuantity={selectedProduct.quantity}
+          onClose={handleCloseModal}
+          onDispense={handleDispense}
+          product={selectedProduct}
+        />
+      )}
     </div>
   );
 };
