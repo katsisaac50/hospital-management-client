@@ -63,22 +63,18 @@ const Inventory = () => {
   }, [debouncedSearch, products]);
 
   return (
-    <div className={`p-8 min-h-screen ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'}`}>
+    <div className={`px-4 py-6 min-h-screen ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'}`}>
       {/* Header */}
-      <header className="flex justify-between items-center mb-6">
-        <h1 className={`text-3xl font-bold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-700'}`}>
-          Pharmacy Inventory
-        </h1>
+      <header className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <h1 className={`text-xl sm:text-3xl font-bold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-700'}`}>Pharmacy Inventory</h1>
         <Link href="/dashboard">
-          <Button className={`${theme === 'dark' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-600 hover:bg-blue-700'} text-white`}>
-            Back to Dashboard
-          </Button>
+          <Button className={`${theme === 'dark' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-600 hover:bg-blue-700'} text-white w-full sm:w-auto`}>Back to Dashboard</Button>
         </Link>
       </header>
 
       {/* Search Bar */}
-      <div className="mb-6 flex items-center gap-3 w-full sm:w-2/3">
-        <div className="relative flex-grow">
+      <div className="mb-6 flex flex-col sm:flex-row items-center gap-3 w-full sm:w-2/3">
+        <div className="relative flex-grow w-full">
           <Input
             type="text"
             placeholder="Search products..."
@@ -93,12 +89,12 @@ const Inventory = () => {
       </div>
 
       {/* Inventory Sections */}
-      <section className={`p-6 rounded-lg shadow-lg mb-6 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>
+      <section className={`p-4 sm:p-6 rounded-lg shadow-lg mb-6 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>
         <h3 className="text-lg font-semibold mb-4">Add New Product</h3>
         <ProductForm />
       </section>
 
-      <section className={`p-6 rounded-lg shadow-lg ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>
+      <section className={`p-4 sm:p-6 rounded-lg shadow-lg overflow-x-auto ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>
         <h3 className="text-lg font-semibold mb-4">Inventory List</h3>
         {filteredProducts.length === 0 ? (
           <p className="text-center text-gray-500">No products found.</p>
