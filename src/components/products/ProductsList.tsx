@@ -1,22 +1,58 @@
-import { useContext } from 'react';
+import React, { useState, useEffect } from "react";
 import { useProductsContext } from '../../context/ProductsContext';
 import { useTheme } from '../../context/ThemeContext'; // Import theme context
 import { Product } from './../../lib/interfaces';
 import Button from '../ui/button';
 import { useAppContext } from '../../context/AppContext';
+import EditProductModal from "./EditProductModal";
 
 // Define the type for props
 interface ProductsListProps {
   products?: Product[]; // Optional because we fall back to context products
+  onDispense?: (product: Product) => void;
 }
 
 const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => {
-  const { products: contextProducts } = useProductsContext();
+  const { products: contextProducts, setProducts } = useProductsContext();
   const { theme } = useTheme(); // Get the current theme
   const { user } = useAppContext();
-
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+console.log('products', products)
   // Use provided products or fallback to context products
   const productItems = products && products.length > 0 ? products : contextProducts;
+  
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`);
+    const data = await response.json();
+    setProducts(data); // Update context with fresh data
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedProduct(null); // Clear selected product
+  };
+  const handleEdit = (product) => {
+    setSelectedProduct(product);
+    setModalOpen(true);
+  };
+
+  const handleDispense = (product: Product) => {
+    if (onDispense) {
+      onDispense(product);
+    } else {
+      console.warn("onDispense function is not provided.");
+    }
+  };
+  
 
   return (
     <div 
@@ -42,24 +78,35 @@ const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => 
       >
         <td className="p-3">{product.name}</td>
         <td className="p-3">{product.category}</td>
-        <td className="p-3">{product.quantity}</td>
+        <td className="p-3">{product.quantity ?? 0}</td>
         <td className="p-3">{product.price}</td>
         <td className="p-3">{product.batchNumber || 'N/A'}</td>
         <td className="p-3">
           {/* Show the button only for authorized roles */}
-          {['admin', 'pharmacist', 'doctor'].includes(user?.role) && (
+          {['admin', 'pharmacist', 'doctor'].includes(user?.role) && (<>
+            <Button variant="contained" onClick={() => handleEdit(product)}>Edit</Button>
             <Button
-              onClick={() => onDispense(product)}
+              onClick={() => handleDispense(product)}
               className="bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded"
             >
               Dispense
             </Button>
+          </>
+            
           )}
         </td>
       </tr>
     ))}
   </tbody>
 </table>
+{selectedProduct && (
+        <EditProductModal
+          open={modalOpen}
+          handleClose={handleCloseModal}
+          product={selectedProduct}
+          refreshProducts={fetchProducts}
+        />
+      )}
 </div>
 
   );

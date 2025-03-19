@@ -34,7 +34,7 @@ const Inventory = () => {
     setSelectedProduct(null);
   };
 
-  const handleDispense = (quantity: number) => {
+  const handleDispense = (productID: Product, quantity: number ) => {
     if (!selectedProduct) return;
 
     if (selectedProduct.quantity < quantity) {
@@ -44,7 +44,7 @@ const Inventory = () => {
 
     const updatedProducts = products.map((product) =>
       product._id === selectedProduct._id
-        ? { ...product, quantity: product.quantity - quantity }
+        ? { ...product, quantity: Number(product.quantity) - Number(quantity) }
         : product
     );
 
