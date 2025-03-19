@@ -5,12 +5,15 @@ import { Product } from './../../lib/interfaces';
 import Button from '../ui/button';
 import { useAppContext } from '../../context/AppContext';
 import EditProductModal from "./EditProductModal";
+import axios from 'axios';
 
 // Define the type for props
 interface ProductsListProps {
   products?: Product[]; // Optional because we fall back to context products
   onDispense?: (product: Product) => void;
 }
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => {
   const { products: contextProducts, setProducts } = useProductsContext();
@@ -28,9 +31,8 @@ console.log('products', products)
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`);
-    const data = await response.json();
-    setProducts(data); // Update context with fresh data
+      const response = await axios.get(`${API_URL}/products`);
+    setProducts(response.data); // Update context with fresh data
     } catch (error) {
       console.error("Error fetching products:", error);
     }
@@ -53,6 +55,16 @@ console.log('products', products)
     }
   };
   
+  const handleDelete = async (productId: string) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
+
+    try {
+      await axios.delete(`${API_URL}/products/${productId}`);
+      fetchProducts(); // Refresh product list after deletion
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    }
+  };
 
   return (
     <div 
@@ -90,6 +102,9 @@ console.log('products', products)
               className="bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded"
             >
               Dispense
+            </Button>
+            <Button onClick={() => handleDelete(product._id)} className="bg-red-500 text-white hover:bg-red-600 px-4 py-2 rounded">
+                      Delete
             </Button>
           </>
             
