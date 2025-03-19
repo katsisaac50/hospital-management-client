@@ -102,27 +102,28 @@ const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => 
               <td className="p-3">{product.price}</td>
               <td className="p-3">{product.batchNumber || "N/A"}</td>
               {["admin", "pharmacist", "doctor"].includes(user?.role) && (
-                <td className="p-3 flex gap-2">
+                <td className="p-2 flex gap-1">
                 <Button
                   variant="contained"
                   onClick={() => handleEdit(product)}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-all"
+                  className="bg-blue-500 text-white px-3 py-1 rounded-md shadow-sm hover:bg-blue-600 transition-all"
                 >
                   ✏️ Edit
                 </Button>
                 <Button
                   onClick={() => handleDispense(product)}
-                  className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-600 transition-all"
+                  className="bg-green-500 text-white px-3 py-1 rounded-md shadow-sm hover:bg-green-600 transition-all"
                 >
                   💊 Dispense
                 </Button>
                 <Button
                   onClick={() => handleDelete(product._id)}
-                  className="bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition-all"
+                  className="bg-red-500 text-white px-3 py-1 rounded-md shadow-sm hover:bg-red-600 transition-all"
                 >
                   🗑️ Delete
                 </Button>
-              </td>              
+              </td>
+              
               )}
             </tr>
           ))}
