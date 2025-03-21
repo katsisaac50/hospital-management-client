@@ -129,7 +129,7 @@ const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => 
           open={modalOpen}
           handleClose={handleCloseModal}
           product={selectedProduct}
-          refreshProducts={() => fetchProducts()} // Pass function reference
+          refreshProducts={fetchProducts} // Pass function reference
         />
       )}
     </div>
