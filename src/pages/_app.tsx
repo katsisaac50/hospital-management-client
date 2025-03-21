@@ -91,7 +91,7 @@ queryClient.setDefaultOptions({
 const MyApp = ({ Component, pageProps }: AppProps) => {
 
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/service-worker.js')
         .then((registration) => {

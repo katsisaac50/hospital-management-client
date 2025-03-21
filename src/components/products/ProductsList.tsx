@@ -22,17 +22,18 @@ const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
+  const fetchProducts = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/products`);
+      setProducts(response.data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
+  
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/products`);
-        setProducts(response.data);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      }
-    };
     fetchProducts();
-  }, [setProducts]);
+  }, []);
 
   const handleCloseModal = () => {
     setModalOpen(false);
