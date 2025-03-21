@@ -1,4 +1,5 @@
 import type { AppProps } from 'next/app';
+import { useEffect } from 'react';
 import '../styles/globalcss.css';
 import { AppProvider } from '../context/AppContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -7,6 +8,7 @@ import { ToastContainer , toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ErrorBoundary from '../components/ErrorBoundary';
 import axios from 'axios';
+import OfflineWarning from '../components/OfflineWarning';
 // import { AuthProvider } from "../context/AuthContext";
 import * as Sentry from '@sentry/nextjs';
 
@@ -87,10 +89,54 @@ queryClient.setDefaultOptions({
 });
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/service-worker.js')
+        .then((registration) => {
+          console.log('Service Worker registered with scope:', registration.scope);
+
+          if ('sync' in registration) {
+            navigator.serviceWorker.ready.then((reg) => {
+              reg.sync.register('sync-patients');
+            });
+          }
+        })
+        .catch((error) => console.error('Service Worker registration failed:', error));
+    }
+
+    // Handle sync messages from Service Worker
+    const messageHandler = async (event: MessageEvent) => {
+      if (event.data.action === 'sync-patients') {
+        const patients = await getAllData('patients');
+
+        if (patients.length) {
+          await fetch('/api/sync/patients', {
+            method: 'POST',
+            body: JSON.stringify({ patients }),
+            headers: { 'Content-Type': 'application/json' },
+          });
+
+          for (const patient of patients) {
+            await removeData('patients', patient.id);
+          }
+        }
+      }
+    };
+
+    navigator.serviceWorker.addEventListener('message', messageHandler);
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', messageHandler);
+    };
+  }, []);
+
   return (
     // Wrap your app in both AppProvider and QueryClientProvider
     <ErrorBoundary>
     <AppProvider>
+      <OfflineWarning />
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
             <Component {...pageProps} />

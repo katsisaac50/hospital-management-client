@@ -9,6 +9,7 @@ import { useAppContext } from "../context/AppContext";
 import LabRequestForm from "./laboratory/lab-test-request";
 import { useTheme } from "../context/ThemeContext";
 import { ArrowsUpDownIcon, MagnifyingGlassIcon, AdjustmentsHorizontalIcon, UserPlusIcon } from "@heroicons/react/24/solid";
+import { saveOfflineData } from '../utils/indexedDB';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -101,6 +102,11 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
 
   const handleTestSubmit = async (formData) => {
     console.log(formData)
+    if (!navigator.onLine) {
+      console.log('Offline: Saving data locally');
+      await saveOfflineData(formData);
+      return { success: false, message: 'Saved offline' };
+    }
     if (!formData.patientId || !formData.doctorId || !formData.testName) {
       alert("Please fill in all required fields: Patient ID, Doctor ID, and Test Name.");
       return;
