@@ -79,7 +79,7 @@ const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => 
   const handleCloseRestockModal = () => {
     setRestockModalOpen(false);
     setRestockProduct(null);
-    toast.info("Successfully Restocked.");
+    toast.success("Successfully Restocked.");
     fetchProducts(); // Refresh products after restocking
   };
 
@@ -134,7 +134,7 @@ const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => 
                       💊 Dispense
                     </Button>
                     <button
-                      onClick={() => openRestockModal(product._id)}
+                      onClick={() => openRestockModal(product)}
                       className="px-3 py-1 bg-green-500 text-white rounded"
                     >
                       Restock
