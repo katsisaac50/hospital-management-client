@@ -10,7 +10,7 @@ const dbPromise = openDB('hospitalDB', 1, {
 });
 
 // Function to save data offline
-export const saveData = async (storeName: string, data: any) => {
+export const saveOfflineData = async (storeName: string, data: any) => {
   const db = await dbPromise;
   await db.put(storeName, data);
 };
