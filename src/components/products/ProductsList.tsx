@@ -6,6 +6,8 @@ import Button from "../ui/button";
 import { useAppContext } from "../../context/AppContext";
 import EditProductModal from "./EditProductModal";
 import axios from "axios";
+import {toast} from "react-hot-toast";
+import RestockProductForm from "./RestockProductForm";
 
 interface ProductsListProps {
   products?: Product[];
@@ -21,6 +23,8 @@ const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => 
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [restockModalOpen, setRestockModalOpen] = useState(false);
+  const [restockProduct, setRestockProduct] = useState<Product | null>(null);
 
   const fetchProducts = async () => {
     try {
@@ -38,6 +42,7 @@ const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => 
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedProduct(null);
+    toast.success(`Edited successfully!`);
   };
 
   const handleEdit = (product: Product) => {
@@ -46,7 +51,10 @@ const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => 
   };
 
   const handleDispense = (product: Product) => {
-    onDispense?.(product);
+    if (window.confirm(`Are you sure you want to dispense ${product.name}?`)) {
+      onDispense?.(product);
+      toast.success(`${product.name} dispensed successfully!`);
+    }
   };
 
   const handleDelete = async (productId: string) => {
@@ -54,9 +62,25 @@ const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => 
     try {
       await axios.delete(`${API_URL}/products/${productId}`);
       setProducts((prev) => prev.filter((p) => p._id !== productId));
+      toast.success("Product deleted successfully!");
     } catch (error) {
       console.error("Error deleting product:", error);
+      toast.error("Failed to delete product. Please try again.");
     }
+  };
+
+  // Placeholder function for restocking (Implement properly if needed)
+  const openRestockModal = (product: Product) => {
+    setRestockProduct(product);
+    // setSelectedProduct(contextProducts.find((p) => p._id === productId));
+    setRestockModalOpen(true);
+  };
+
+  const handleCloseRestockModal = () => {
+    setRestockModalOpen(false);
+    setRestockProduct(null);
+    toast.info("Successfully Restocked.");
+    fetchProducts(); // Refresh products after restocking
   };
 
   const productItems = products?.length ? products : contextProducts;
@@ -109,6 +133,12 @@ const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => 
                     >
                       💊 Dispense
                     </Button>
+                    <button
+                      onClick={() => openRestockModal(product._id)}
+                      className="px-3 py-1 bg-green-500 text-white rounded"
+                    >
+                      Restock
+                    </button>
                     <Button
                       onClick={() => handleDelete(product._id)}
                       className="bg-red-500 text-white px-2 py-1 text-xs md:text-sm rounded-md shadow-sm hover:bg-red-600 transition-all"
@@ -122,7 +152,6 @@ const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => 
           </tbody>
         </table>
       </div>
-
       {/* Edit Modal */}
       {selectedProduct && (
         <EditProductModal
@@ -131,6 +160,14 @@ const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => 
           product={selectedProduct}
           refreshProducts={fetchProducts} // Pass function reference
         />
+      )}
+      {/* Restock Product Modal */}
+      {restockModalOpen && (
+        <RestockProductForm
+        closeModal={handleCloseRestockModal}
+        productId={restockProduct._id}
+        refreshProducts={fetchProducts}
+      />
       )}
     </div>
   );
