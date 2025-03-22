@@ -17,6 +17,7 @@ export const saveOfflineData = async (storeName: string, data: any) => {
 
 // Function to get data
 export const getData = async (storeName: string, id: string) => {
+  if (typeof window === "undefined") return null; // Prevents execution on the server
   const db = await dbPromise;
   return db.get(storeName, id);
 };
