@@ -91,9 +91,9 @@ const ProductsList: React.FC<ProductsListProps> = ({ products, onDispense }) => 
         theme === "dark" ? "bg-gray-800 text-gray-300" : "bg-white text-black"
       }`}
     >
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
         <table className="w-full border-collapse">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-gray-200 dark:bg-gray-700">
             <tr className={`${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} text-black`}>
               <th className="p-2 md:p-3 border-b">Name</th>
               <th className="p-2 md:p-3 border-b">Category</th>

@@ -4,8 +4,9 @@ import { addProduct } from '../../services/productsService';
 import { AxiosError } from 'axios';
 import { useTheme } from '../../context/ThemeContext'; // Import theme context
 import { Product } from './../../lib/interfaces';
+import { toast } from 'react-hot-toast';
 
-const ProductForm = () => {
+const ProductForm = ({ handleCloseModal }: { handleCloseModal: () => void }) => {
   const { setProducts } = useProductsContext();
 
   const { theme } = useTheme(); // Get current theme
@@ -23,6 +24,8 @@ const ProductForm = () => {
     try {
       const newProduct = await addProduct(form);
       setProducts((prev: Product[]) => [...prev, newProduct]);
+      toast.success('Product added successfully!');
+      handleCloseModal();
     } catch (error) {
       const err = error as AxiosError;
       console.error('Failed to add product:', err.response?.data || err.message);

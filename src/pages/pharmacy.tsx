@@ -23,6 +23,7 @@ const Inventory = () => {
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showProductModal, setShowProductModal] = useState(false);
 
   const handleOpenModal = (product: Product) => {
     setSelectedProduct(product);
@@ -47,7 +48,6 @@ const Inventory = () => {
         ? { ...product, quantity: Number(product.quantity) - Number(quantity) }
         : product
     );
-
     setProducts(updatedProducts);
   };
 
@@ -88,11 +88,12 @@ const Inventory = () => {
         </div>
       </div>
 
-      {/* Inventory Sections */}
-      <section className={`p-4 sm:p-6 rounded-lg shadow-lg mb-6 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>
-        <h3 className="text-lg font-semibold mb-4">Add New Product</h3>
-        <ProductForm />
-      </section>
+      {/* Button to Open Add Product Modal */}
+      <div className="mb-6">
+        <Button onClick={() => setShowProductModal(true)} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+          + Add New Product
+        </Button>
+      </div>
 
       <section className={`p-4 sm:p-6 rounded-lg shadow-lg overflow-x-auto ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>
         <h3 className="text-lg font-semibold mb-4">Inventory List</h3>
@@ -113,6 +114,23 @@ const Inventory = () => {
           onDispense={handleDispense}
           product={selectedProduct}
         />
+      )}
+
+      {/* Modal for Adding Product */}
+      {showProductModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <section className={`p-4 sm:p-6 rounded-lg shadow-lg mb-6 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>
+        <h3 className="text-lg font-semibold mb-4">Add New Product</h3>
+            <ProductForm
+            handleCloseModal={() => setShowProductModal(false)}
+            />
+            <div className="mt-4 flex justify-end">
+              <Button onClick={() => setShowProductModal(false)} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
+                Close
+              </Button>
+            </div>
+          </section>
+        </div>
       )}
     </div>
   );
