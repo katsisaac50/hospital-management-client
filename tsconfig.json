@@ -19,6 +19,6 @@
       "@/components/*": ["components/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "utils/canUseDom.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "utils/canUseDom.js", "public/service-worker.js"],
   "exclude": ["node_modules"]
 }
