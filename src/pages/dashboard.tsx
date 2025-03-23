@@ -76,6 +76,7 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({ href, icon, title }) =>
 );
 
 const Dashboard: React.FC = () => {
+  const [isClient, setIsClient] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | [Date, Date] | null>(new Date());
   const router = useRouter();
   const { user } = useAppContext();
@@ -90,6 +91,10 @@ const Dashboard: React.FC = () => {
     //   router.replace("/reports");
     // }
   }, [router, userRole]);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   // const fetchHealthData = (date: Date) => {
   //   // This function can fetch health data related to the selected date
@@ -104,6 +109,10 @@ const Dashboard: React.FC = () => {
     }
 };
 
+if (!isClient) {
+  return null; // Optionally show a loading indicator or fallback UI
+};
+
   // Handle logout functionality
   const handleLogout = () => {
     // Clear session storage or cookies (depending on your authentication mechanism)
@@ -116,25 +125,25 @@ const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <aside className="w-16 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 shadow-xl flex flex-col justify-between items-center">
-        <div className="mb-4 w-30 h-30">
-          <Image
-            src="/assets/hospital-icon.png"
-            alt="Hospital Logo"
-            width={64}
-            height={64}
-            className="rounded-full shadow-md hover:shadow-lg transition-shadow duration-300 bg-white"
-          />
-        </div>
+      <aside className="w-16 md:w-64 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 shadow-xl flex flex-col justify-between items-center">
+  <div className="mb-4 w-30 h-30">
+    <Image
+      src="/assets/hospital-icon.png"
+      alt="Hospital Logo"
+      width={64}
+      height={64}
+      className="rounded-full shadow-md hover:shadow-lg transition-shadow duration-300 bg-white"
+    />
+  </div>
 
-        <nav>
-          <ul className="flex flex-col space-y-4 items-center">
-            <NavigationLink href="/patients" icon="people" title="View Patients" />
-            <NavigationLink href="/doctors" icon="person" title="View Doctors" />
-            <NavigationLink href="/appointments" icon="event" title="Appointments" />
-            <NavigationLink href="/reports" icon="description" title="Reports" />
-            <NavigationLink href="/pharmacy" icon="medication" title="Pharmacy" />
-            <NavigationLink href="/settings" icon="settings" title="Settings" />
+  <nav>
+    <ul className="flex flex-col space-y-4 items-center">
+      <NavigationLink href="/patients" icon="people" title="View Patients" />
+      <NavigationLink href="/doctors" icon="person" title="View Doctors" />
+      <NavigationLink href="/appointments" icon="event" title="Appointments" />
+      <NavigationLink href="/reports" icon="description" title="Reports" />
+      <NavigationLink href="/pharmacy" icon="medication" title="Pharmacy" />
+      <NavigationLink href="/settings" icon="settings" title="Settings" />
 
             {/* Navigation Links */}
             {/* {checkAccess(["admin", "doctor"]) && <NavigationLink href="/patients" icon="people" title="View Patients" />}
@@ -148,16 +157,16 @@ const Dashboard: React.FC = () => {
         </nav>
 
         <button
-          onClick={handleLogout}
-          className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-500 hover:bg-blue-700 transition-all duration-300"
-        >
-          <span className="material-icons-outlined text-xl">logout</span>
-        </button>
+    onClick={handleLogout}
+    className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-500 hover:bg-blue-700 transition-all duration-300"
+  >
+    <span className="material-icons-outlined text-xl">logout</span>
+  </button>
 
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8">
+      <main className="flex-1 container mx-auto px-4 sm:px-8">
         {/* Welcome Header */}
         <header className="bg-white shadow-lg rounded-lg p-8 mb-6 flex items-center space-x-6">
           <Image
@@ -168,7 +177,7 @@ const Dashboard: React.FC = () => {
             className="rounded-full shadow-md"
           />
           <div>
-            <h1 className="text-4xl font-extrabold text-blue-600">Welcome Back, Dr. Mera Malaika!</h1>
+          <h1 className="text-xl sm:text-2xl md:text-4xl font-extrabold text-blue-600">Welcome, Dr. {user && user.name}!</h1>
             <p className="text-gray-600 mt-2 text-lg">Have you had a routine health check this month?</p>
             <div className="mt-4 flex space-x-4">
               <button className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600">
@@ -191,7 +200,7 @@ const Dashboard: React.FC = () => {
         {/* Calendar and Health Data */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
           {/* Calendar */}
-          <div className="bg-white p-6 rounded-lg shadow-lg">
+          <div className="bg-white p-6 rounded-lg shadow-lg overflow-x-auto">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">Upcoming Check-Up</h3>
             <Calendar
               onChange={(value) => handleDateChange(value as Date | [Date, Date] | null)} 
@@ -235,7 +244,7 @@ const Dashboard: React.FC = () => {
           <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
             <div className="bg-green-600 h-2" style={{ width: '60%' }}></div> {/* Adjust width dynamically */}
           </div>
-          <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all">
+          <button className="w-full md:w-auto bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
             View Card
           </button>
         </div>
