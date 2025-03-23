@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useAppContext } from '../context/AppContext'; // Use AuthContext instead of AppContext
 import { useTheme } from '../context/ThemeContext';
 import { AiOutlineEye, AiOutlineEyeInvisible, AiOutlineMoon, AiOutlineSun } from 'react-icons/ai';
+import {login} from './../utils/indexedDB';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -35,26 +36,27 @@ const Login = () => {
       setError("Please fill in all fields");
       return;
     }
+    login(email, password, setLoading, setError, setUser, router);
   
-    setLoading(true);
-    const url = `${API_URL}/auth/login`;
-    console.log("Sending request to:", url);
-    try {
-      const response = await axios.post(url, { email, password });
+    // setLoading(true);
+    // const url = `${API_URL}/auth/login`;
+    // console.log("Sending request to:", url);
+    // try {
+    //   const response = await axios.post(url, { email, password });
   
-      document.cookie = `authToken=${response.data.token}; path=/; secure; samesite=strict;`;
+    //   document.cookie = `authToken=${response.data.token}; path=/; secure; samesite=strict;  httpOnly;`;
   
-      console.log("Full User Data:", response.data); // Debugging log
+    //   console.log("Full User Data:", response.data); // Debugging log
   
-      setUser(response.data); // Store full user data
-      localStorage.setItem("user", JSON.stringify(response.data)); // Persist all fields
+    //   setUser(response.data); // Store full user data
+    //   localStorage.setItem("user", JSON.stringify(response.data)); // Persist all fields
   
-      router.push("/dashboard");
-    } catch (err) {
-      setError(err.response?.data?.message || "Invalid username or password");
-    } finally {
-      setLoading(false);
-    }
+    //   router.push("/dashboard");
+    // } catch (err) {
+    //   setError(err.response?.data?.message || "Invalid username or password");
+    // } finally {
+    //   setLoading(false);
+    // }
   };  
 
   return (
