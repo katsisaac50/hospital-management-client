@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import Button from "../ui/button";
+import { useAppContext } from "../../context/AppContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -16,6 +17,7 @@ interface DispenseModalProps {
 
 const DispenseModal = ({ product, onClose, onDispense }: DispenseModalProps) => {
   const { theme } = useTheme();
+  const { user } = useAppContext();
   const [quantityToDispense, setQuantityToDispense] = useState(0);
 
   const handleDispense = async () => {
@@ -32,7 +34,7 @@ const DispenseModal = ({ product, onClose, onDispense }: DispenseModalProps) => 
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ quantity: quantityToDispense }),
+          body: JSON.stringify({ quantity: quantityToDispense, userId: user?._id }),
         }
       );
 
