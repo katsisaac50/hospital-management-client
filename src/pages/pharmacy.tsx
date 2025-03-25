@@ -65,11 +65,20 @@ const Inventory = () => {
   return (
     <div className={`px-4 py-6 min-h-screen ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'}`}>
       {/* Header */}
-      <header className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <header className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <h1 className={`text-xl sm:text-3xl font-bold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-700'}`}>Pharmacy Inventory</h1>
-        <Link href="/dashboard">
-          <Button className={`${theme === 'dark' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-600 hover:bg-blue-700'} text-white w-full sm:w-auto`}>Back to Dashboard</Button>
-        </Link>
+        <div className="flex gap-3">
+          <Link href="/dashboard">
+            <Button className={`${theme === 'dark' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-600 hover:bg-blue-700'} text-white w-full sm:w-auto`}>
+              Back to Dashboard
+            </Button>
+          </Link>
+          <Link href="/inventory/dispensedMedicationsPage">
+            <Button className={`${theme === 'dark' ? 'bg-purple-500 hover:bg-purple-600' : 'bg-purple-600 hover:bg-purple-700'} text-white w-full sm:w-auto`}>
+              View Dispensed Products
+            </Button>
+          </Link>
+        </div>
       </header>
 
       {/* Search Bar */}
