@@ -203,7 +203,7 @@ const DispensedMedicationsPage: React.FC = () => {
           <table className={`table-auto w-full text-left border-collapse ${theme === "dark" ? "border-gray-700" : "border-gray-300"}`}>
             <thead>
               <tr>
-                {["Patient Name", "Medication Name", "Dosage", "Quantity", "Price", "Total Price", "Date Dispensed", "Prescribing Doctor"].map((header) => (
+                {["Patient Name", "Medication Name", "Dosage", "Quantity", "Price", "Total Price", "Date Dispensed", "Dispensed By"].map((header) => (
                   <th key={header} className={`border px-4 py-2 ${theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-300 bg-gray-100"}`}>
                     {header}
                   </th>
@@ -217,10 +217,10 @@ const DispensedMedicationsPage: React.FC = () => {
                   <td className="border px-4 py-2">{med.medicationName}</td>
                   <td className="border px-4 py-2">{med.dosage}</td>
                   <td className="border px-4 py-2">{med.quantity}</td>
-                  <td className="border px-4 py-2">${med.price}</td>
-                  <td className="border px-4 py-2">${(med.price * med.quantity).toFixed(2)}</td>
+                  <td className="border px-4 py-2">UGX {med.price}</td>
+                  <td className="border px-4 py-2">UGX {(med.price * med.quantity).toFixed(2)}</td>
                   <td className="border px-4 py-2">{med.dateDispensed}</td>
-                  <td className="border px-4 py-2">{med.prescribingDoctor}</td>
+                  <td className="border px-4 py-2">{med.dispensedBy}</td>
                 </tr>
               ))}
             </tbody>
@@ -229,7 +229,7 @@ const DispensedMedicationsPage: React.FC = () => {
           {/* Grand Total */}
           <div className="mt-4 text-right">
             <p className="text-xl font-semibold">
-              Grand Total: ${calculateGrandTotal().toFixed(2)}
+              Grand Total: UGX {calculateGrandTotal().toFixed(2)}
             </p>
           </div>
         </>
