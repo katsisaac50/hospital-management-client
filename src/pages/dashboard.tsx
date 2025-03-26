@@ -143,6 +143,7 @@ if (!isClient) {
       <NavigationLink href="/appointments" icon="event" title="Appointments" />
       <NavigationLink href="/reports" icon="description" title="Reports" />
       <NavigationLink href="/pharmacy" icon="medication" title="Pharmacy" />
+      <NavigationLink href="/biling/finance-dashboard" icon="monetization_on" title="Finances" />
       <NavigationLink href="/settings" icon="settings" title="Settings" />
 
             {/* Navigation Links */}
