@@ -24,7 +24,7 @@ import { SelectChangeEvent } from "@mui/material";
 import dayjs, { Dayjs } from "dayjs";
 import { toast } from "react-toastify";
 import AddTestResultModal from "./../../components/addTestResultModal";
-import { validateTestChange } from "../../../utils/validation";
+import { validateTestChange } from "../../utils/validation";
 import {TestHistoryParams} from "../../lib/interfaces";
 import { GridColDef, GridValueGetterParams } from "@mui/x-data-grid";
 
