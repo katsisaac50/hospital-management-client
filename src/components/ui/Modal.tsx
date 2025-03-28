@@ -1,4 +1,6 @@
-import { ReactNode } from "react";
+import React, { ReactNode } from "react";
+import { Modal, Box, IconButton } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 
 interface ModalProps {
   isOpen: boolean;
@@ -6,17 +8,55 @@ interface ModalProps {
   children: ReactNode;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
-  if (!isOpen) return null;
-
+const CustomModal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-4 rounded-md shadow-lg z-50">
-        <button className="absolute top-2 right-2 text-xl" onClick={onClose}>&times;</button>
-        {children}
-      </div>
-    </div>
+    <Modal open={isOpen} onClose={onClose} aria-labelledby="modal-title">
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: { xs: "90%", sm: 400, md: 500 }, // Responsive width
+          bgcolor: "background.paper",
+          boxShadow: 24,
+          borderRadius: 2,
+          maxHeight: "90vh", // Prevents modal from exceeding viewport height
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {/* Close Button (Fixed Position) */}
+        <Box
+          sx={{
+            position: "sticky",
+            top: 0,
+            backgroundColor: "background.paper",
+            zIndex: 10,
+            display: "flex",
+            justifyContent: "flex-end",
+            padding: 1,
+            borderBottom: "1px solid rgba(0, 0, 0, 0.1)", // Subtle divider
+          }}
+        >
+          <IconButton onClick={onClose} sx={{ color: "grey.600" }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+
+        {/* Content Area (Scrollable) */}
+        <Box
+          sx={{
+            padding: 2,
+            overflowY: "auto",
+            flexGrow: 1, // Makes it take up remaining space
+          }}
+        >
+          {children}
+        </Box>
+      </Box>
+    </Modal>
   );
 };
 
-export default Modal;
+export default CustomModal;

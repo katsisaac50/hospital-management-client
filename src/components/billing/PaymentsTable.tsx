@@ -6,6 +6,10 @@ import {
 } from '@mui/material';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import PaymentForm from './PaymentForm';
+import CustomModal from '../ui/Modal';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Define TypeScript Interfaces
 interface Payment {
@@ -15,6 +19,13 @@ interface Payment {
   balance: number;
   payment_date: string;
   payment_method: string;
+  patientId: { fullName: string };
+  name: string;
+  date: string;
+  total: number;
+  paid: number;
+  transactionType: string;
+  notes: string;
 }
 
 const PaymentsTable: React.FC = () => {
@@ -23,6 +34,7 @@ const PaymentsTable: React.FC = () => {
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState<number>(0);
   const [rowsPerPage, setRowsPerPage] = useState<number>(10);
+  const [openModal, setOpenModal] = useState<boolean>(false);
 
   useEffect(() => {
     fetchPayments();
@@ -30,7 +42,8 @@ const PaymentsTable: React.FC = () => {
 
   const fetchPayments = async () => {
     try {
-      const response = await axios.get<Payment[]>('/api/payments', { params: { sortBy, order } });
+      const response = await axios.get<Payment[]>(`${API_URL}/payments`, { params: { sortBy, order } });
+      console.log(response)
       setPayments(response.data);
     } catch (error) {
       console.error("Error fetching payments:", error);
@@ -76,6 +89,19 @@ const PaymentsTable: React.FC = () => {
   return (
     <Box sx={{ padding: 3 }}>
       <h2>Payments</h2>
+      {/* Button to open the modal */}
+      <Button variant="contained" onClick={() => setOpenModal(true)} sx={{ marginBottom: 2 }}>
+        Add Payment
+      </Button>
+
+      {/* Payment Modal */}
+      <CustomModal isOpen={openModal} onClose={() => setOpenModal(false)}>
+        <PaymentForm onPaymentAdded={() => {
+          fetchPayments();
+          setOpenModal(false); // Close modal after adding
+        }} />
+      </CustomModal>
+      
 
       {/* Export Buttons */}
       <Box sx={{ marginBottom: 2 }}>
@@ -109,6 +135,11 @@ const PaymentsTable: React.FC = () => {
                 </TableSortLabel>
               </TableCell>
               <TableCell>Payment Method</TableCell>
+              <TableCell>Transaction Type</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Total</TableCell>
+              <TableCell>Notes</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
