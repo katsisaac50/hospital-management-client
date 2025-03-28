@@ -121,7 +121,9 @@ export const login = async (email: string, password: string, setLoading, setErro
       const response = await axios.post(url, { email, password });
   console.log('yems', response)
       document.cookie = `authToken=${response.data.token}; path=/; secure; samesite=strict;  httpOnly;`;
-  
+
+      localStorage.setItem("authToken", response.data.token); // Persist "authToken");
+
       console.log("Full User Data:", response.data); // Debugging log
     if (response.status === 200) {
       alert('Logged in successfully');
