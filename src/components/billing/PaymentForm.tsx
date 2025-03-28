@@ -165,7 +165,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onPaymentAdded }) => {
       <TextField label="Payment Status" name="paymentStatus" value={formData.paymentStatus} fullWidth InputProps={{ readOnly: true }} />
 
 
-      {/* Transaction Type */}
+      {/* Payment method */}
       <TextField select label="Payment Method" name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} fullWidth required>
         {["Cash", "Card", "Mobile Money", "Insurance", "Bank Transfer", "Other"].map((option) => (
           <MenuItem key={option} value={option}>
