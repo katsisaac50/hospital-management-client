@@ -43,7 +43,8 @@ export async function getServerSideProps(context: {
   // console.log('Cookies:', req.headers.cookie);
 
   const cookies = req.headers.cookie ? cookie.parse(req.headers.cookie || "") : {};
-  const token = cookies.authToken;
+  // console.log("Cookies:", req);
+  const token = cookies?.authToken;
   console.log("Token being sent:", token);
   if (!token) {
     return {
@@ -227,11 +228,12 @@ const Patients = ({ patients }: { patients: Patient[] }) => {
       );
       alert("Patient updated successfully.");
       closeModal();
+      router.replace(router.asPath);
       // window.location.reload();
-      setSelectedPatient({ ...selectedPatient, ...formData });
-setPatients((prevPatients) =>
-  prevPatients.map((p) => (p._id === selectedPatient._id ? { ...p, ...formData } : p))
-);
+//       setSelectedPatient({ ...selectedPatient, ...formData });
+// setPatients((prevPatients) =>
+//   prevPatients.map((p) => (p._id === selectedPatient._id ? { ...p, ...formData } : p))
+// );
     } catch (error) {
       console.error("Error updating patient:", error);
       alert("Failed to update the patient. Please try again.");
@@ -266,11 +268,14 @@ setPatients((prevPatients) =>
         }
       );
       alert("Patient deleted successfully.");
+      // Update patient in the list
+    setPatients((prevPatients) =>
+      prevPatients.map((p) =>
+        p._id === selectedPatient._id ? { ...p, ...formData } : p
+      )
+    );
       closeModal();
       setSelectedPatient({ ...selectedPatient, ...formData });
-setPatients((prevPatients) =>
-  prevPatients.map((p) => (p._id === selectedPatient._id ? { ...p, ...formData } : p))
-);
       // window.location.reload();
     } catch (error) {
       console.error("Error deleting patient:", error);

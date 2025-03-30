@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import { useRouter } from 'next/router';
@@ -6,297 +6,239 @@ import { toast } from 'react-toastify';
 import { useTheme } from '../context/ThemeContext';
 
 const AddPatientForm = () => {
-  const [patientID, setPatientID] = useState('');
-  const [name, setName] = useState('');
-  const [dob, setDob] = useState('');
-  const [gender, setGender] = useState('');
-  const [contact, setContact] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [emergencyContact, setEmergencyContact] = useState('');
-  const [address, setAddress] = useState('');
-  const [medicalHistory, setMedicalHistory] = useState('');
-  const [insurance, setInsurance] = useState('');
-  const [allergies, setAllergies] = useState('');
-  const [bloodType, setBloodType] = useState('');
-  const [maritalStatus, setMaritalStatus] = useState('');
-  const [occupation, setOccupation] = useState('');
-  const [physicalExamination, setPhysicalExamination] = useState('');
-  const [treatment, setTreatment] = useState('');
-  const [laboratory, setLaboratory] = useState('');
+  const [formData, setFormData] = useState({
+    patientID: '',
+    name: '',
+    dob: '',
+    gender: '',
+    contact: '',
+    email: '',
+    emergencyContact: '',
+    address: '',
+    medicalHistory: '',
+    insurance: '',
+    allergies: '',
+    bloodType: '',
+    maritalStatus: '',
+    occupation: '',
+    physicalExamination: '',
+    treatment: '',
+    laboratory: '',
+    services: [], // Store selected services with their price and description
+  });
+  
   const [isLoading, setLoading] = useState(false);
-
+  const [servicesList, setServicesList] = useState<ServiceType[]>([]);
   const router = useRouter();
+  const { theme } = useTheme();
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  // Access theme from ThemeContext
-  const { theme, toggleTheme } = useTheme();
+  useEffect(() => {
+    // Fetch available services from the backend
+    const fetchServices = async () => {
+      const token = getTokenFromCookie();
+    
+    if (!token) {
+      toast.error('Authorization token missing! Please log in again.');
+      router.push('/login');
+      return;
+    }
+      try {
+        const response = await axios.get(`${API_URL}/services`);
+        console.log('response', response);
+        setServicesList(response.data.data); // Assuming the API returns { services: [...] }
+      } catch (error) {
+        console.error('Error fetching services:', error);
+        toast.error('Failed to load services.');
+      }
+    };
+    
+    fetchServices();
+  }, [API_URL]);
 
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Handle service selection
+  const handleServiceChange = (index, field, value) => {
+    const updatedServices = [...formData.services];
+    updatedServices[index] = {
+      ...updatedServices[index],
+      [field]: value,
+    };
+    setFormData({ ...formData, services: updatedServices });
+  };
+
+ 
   const getTokenFromCookie = () => {
     const match = document.cookie.match(/(^| )authToken=([^;]+)/);
     return match ? match[2] : null;
   };
 
-  const shouldRetry = (error: any) => {
+  const shouldRetry = (error) => {
     const { config, response } = error;
-    
-    // Retry if the request hasn't reached the maximum retry count
-    // and if the response status is 5xx (server error)
     const retryCount = config['axios-retry']?.retryCount || 0;
     return retryCount < 3 && response?.status >= 500 && response?.status < 600;
   };
-  // Apply axios-retry with custom shouldRetry function
-axiosRetry(axios, { retryCondition: shouldRetry });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  axiosRetry(axios, { retryCondition: shouldRetry });
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
     const token = getTokenFromCookie();
-
+    console.log('ggg', token)
+    
     if (!token) {
       toast.error('Authorization token missing! Please log in again.');
+      router.push('/login');
+      return;
+    }
+
+    // Ensure all services have prices before submission
+    if (formData.services.some((service) => !service.price)) {
+      toast.error('Please provide a price for all selected services.');
       return;
     }
 
     setLoading(true);
-
     try {
-      await axios.post(
-        `${API_URL}/patients`,
-        {
-          patientID,
-          name,
-          dob,
-          gender,
-          contact,
-          email,
-          password,
-          emergencyContact,
-          address,
-          medicalHistory,
-          insurance,
-          allergies,
-          bloodType,
-          maritalStatus,
-          occupation,
-          physicalExamination,
-          treatment,
-          laboratory,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.post(`${API_URL}/patients`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      toast.success("Patient added successfully!");
-
-      // Reset form fields after successful submission
-      setPatientID('');
-      setName('');
-      setDob('');
-      setGender('');
-      setContact('');
-      setEmail('');
-      setPassword('');
-      setEmergencyContact('');
-      setAddress('');
-      setMedicalHistory('');
-      setInsurance('');
-      setAllergies('');
-      setBloodType('');
-      setMaritalStatus('');
-      setOccupation('');
-      setPhysicalExamination('');
-      setTreatment('');
-      setLaboratory('');
-
+      toast.success('Patient added successfully!');
+      setFormData({
+        patientID: '', name: '', dob: '', gender: '', contact: '', email: '', password: '',
+        emergencyContact: '', address: '', medicalHistory: '', insurance: '', allergies: '',
+        bloodType: '', maritalStatus: '', occupation: '', physicalExamination: '', treatment: '', laboratory: '', services: []
+      });
       router.push('/patients');
-      setLoading(false);
     } catch (error) {
       console.error('Error adding patient:', error);
       toast.error('Failed to add patient.');
+    } finally {
       setLoading(false);
     }
   };
 
+
+  const formFields = [
+    { name: 'patientID', label: 'Patient ID', type: 'text' },
+    { name: 'name', label: 'Name', type: 'text' },
+    { name: 'dob', label: 'Date of Birth', type: 'date' },
+    { name: 'gender', label: 'Gender', type: 'select', options: ['Male', 'Female', 'Other'] },
+    { name: 'contact', label: 'Contact Number', type: 'text' },
+    { name: 'email', label: 'Email Address', type: 'email' },
+    { name: 'emergencyContact', label: 'Emergency Contact', type: 'text' },
+    { name: 'address', label: 'Address', type: 'textarea' },
+    { name: 'medicalHistory', label: 'Medical History', type: 'textarea' },
+    { name: 'insurance', label: 'Insurance Details', type: 'text' },
+    { name: 'allergies', label: 'Allergies', type: 'textarea' },
+    { name: 'bloodType', label: 'Blood Type', type: 'text' },
+    { name: 'maritalStatus', label: 'Marital Status', type: 'select', options: ['Single', 'Married', 'Divorced', 'Widowed'] },
+  ];
+
   return (
     <form onSubmit={handleSubmit} className={`max-w-lg mx-auto p-6 rounded-lg shadow-lg ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>
-      {/* Theme Toggle Button */}
-      <div className="mt-4 text-center">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="bg-gray-500 text-white px-4 py-2 rounded-md"
-        >
-          Toggle Theme
-        </button>
-      </div>
       <h2 className="text-2xl font-bold text-center mb-6">Add Patient</h2>
 
-      <div className="mb-4">
-        <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Patient ID:</label>
-        <input
-          type="text"
-          value={patientID}
-          onChange={(e) => setPatientID(e.target.value)}
-          required
-          className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
-        />
-      </div>
+      {formFields.map((field) => (
+        <div className="mb-4" key={field.name}>
+          <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{field.label}:</label>
+          {field.type === 'select' ? (
+            <select
+              name={field.name}
+              value={formData[field.name]}
+              onChange={handleChange}
+              required
+              className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
+            >
+              <option value="">Select {field.label}</option>
+              {field.options?.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          ) : field.type === 'textarea' ? (
+            <textarea
+              name={field.name}
+              value={formData[field.name]}
+              onChange={handleChange}
+              className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
+            />
+          ) : (
+            <input
+              type={field.type}
+              name={field.name}
+              value={formData[field.name]}
+              onChange={handleChange}
+              required
+              className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
+            />
+          )}
+        </div>
+      ))}
 
       <div className="mb-4">
-        <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Name:</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
-        />
-      </div>
+        <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Services Rendered:</label>
+        {formData.services.map((service, index) => (
+          <div key={index} className="flex items-center gap-4 mb-2">
+            <select
+              value={service.serviceId || ''}
+              onChange={(e) => handleServiceChange(index, 'serviceId', e.target.value)}
+              className={`p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
+            >
+              <option value="">Select Service</option>
+              {servicesList.length === 0 ? (
+                    <option>Loading services...</option>
+                  ) : (
+                    servicesList.map((service) => (
+                      <option key={service._id} value={service._id}>
+                        {service.name}
+                      </option>
+                    ))
+                  )}
 
-      <div className="mb-4">
-        <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Date of Birth:</label>
-        <input
-          type="date"
-          value={dob}
-          onChange={(e) => setDob(e.target.value)}
-          required
-          className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Gender:</label>
-        <select
-          value={gender}
-          onChange={(e) => setGender(e.target.value)}
-          required
-          className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
-        >
-          <option value="">Select Gender</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
-        </select>
-      </div>
-
-      <div className="mb-4">
-        <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Contact Number:</label>
-        <input
-          type="text"
-          value={contact}
-          onChange={(e) => setContact(e.target.value)}
-          required
-          className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Email Address:</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Password:</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Emergency Contact:</label>
-        <input
-          type="text"
-          value={emergencyContact}
-          onChange={(e) => setEmergencyContact(e.target.value)}
-          className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Address:</label>
-        <textarea
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Medical History:</label>
-        <textarea
-          value={medicalHistory}
-          onChange={(e) => setMedicalHistory(e.target.value)}
-          className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Insurance Details:</label>
-        <input
-          type="text"
-          value={insurance}
-          onChange={(e) => setInsurance(e.target.value)}
-          className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Allergies:</label>
-        <textarea
-          value={allergies}
-          onChange={(e) => setAllergies(e.target.value)}
-          className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Blood Type:</label>
-        <input
-          type="text"
-          value={bloodType}
-          onChange={(e) => setBloodType(e.target.value)}
-          className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Marital Status:</label>
-        <select
-          value={maritalStatus}
-          onChange={(e) => setMaritalStatus(e.target.value)}
-          className={`w-full p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
-        >
-          <option value="">Select Status</option>
-          <option value="Single">Single</option>
-          <option value="Married">Married</option>
-          <option value="Divorced">Divorced</option>
-          <option value="Widowed">Widowed</option>
-        </select>
-      </div>
-
-      <div className="text-center">
+            </select>
+            <input
+              type="number"
+              placeholder="Price"
+              value={service.price || ''}
+              onChange={(e) => handleServiceChange(index, 'price', e.target.value)}
+              className={`p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
+            />
+            <textarea
+              placeholder="Description"
+              value={service.description || ''}
+              onChange={(e) => handleServiceChange(index, 'description', e.target.value)}
+              className={`p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const updatedServices = [...formData.services];
+                updatedServices.splice(index, 1);
+                setFormData({ ...formData, services: updatedServices });
+              }}
+              className="bg-red-500 text-white p-2 rounded-md"
+            >
+              Remove
+            </button>
+          </div>
+        ))}
         <button
-          type="submit"
-          className={`px-6 py-2 rounded-md text-white ${isLoading ? 'bg-gray-500' : 'bg-blue-600'}`}
-          disabled={isLoading}
+          type="button"
+          onClick={() => setFormData({ ...formData, services: [...formData.services, { serviceId: '', price: '', description: '' }] })}
+          className="bg-green-500 text-white p-2 rounded-md"
         >
-          {isLoading ? 'Submitting...' : 'Submit'}
+          Add Service
         </button>
       </div>
+
+      <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded-md mt-4" disabled={isLoading}>
+        {isLoading ? 'Submitting...' : 'Add Patient'}
+      </button>
     </form>
   );
 };

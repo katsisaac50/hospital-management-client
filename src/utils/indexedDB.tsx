@@ -1,6 +1,7 @@
 import { openDB } from 'idb';
 import CryptoJS from 'crypto-js';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { useAppContext } from '../context/AppContext';
 import { useState } from 'react';
@@ -120,17 +121,22 @@ export const login = async (email: string, password: string, setLoading, setErro
     try {
       const response = await axios.post(url, { email, password });
   console.log('yems', response)
-      document.cookie = `authToken=${response.data.token}; path=/; secure; samesite=strict;  httpOnly;`;
+  document.cookie = `authToken=${response.data.token}; path=/; max-age=3600; samesite=strict`;
 
       localStorage.setItem("authToken", response.data.token); // Persist "authToken");
 
+axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+
+
       console.log("Full User Data:", response.data); // Debugging log
     if (response.status === 200) {
-      alert('Logged in successfully');
+      // Success notification
+      toast.success('Logged in successfully!');
       // Optionally store credentials for offline use
       await saveCredentials(email, password);
     } else {
-      alert('Login failed');
+      // Error notification
+      toast.error(err.response?.data?.message || "Login failed. Please try again.");
     }
   
       setUser(response.data); // Store full user data
@@ -149,13 +155,13 @@ export const login = async (email: string, password: string, setLoading, setErro
     console.log(storedCredentials)
     if (storedCredentials) {
       if (storedCredentials.email === email && storedCredentials.password === password) {
-        alert('Logged in offline successfully');
+        toast.success('Logged in offline successfully');
         router.push("/dashboard");
       } else {
-        alert('Invalid credentials');
+        toast.error('Invalid offline credentials');
       }
     } else {
-      alert('No stored credentials for offline login');
+      toast.error('No stored credentials for offline login');
     }
   }
 };
@@ -186,6 +192,7 @@ window.addEventListener('online', async () => {
       }
     } catch (error) {
       console.error('Failed to sync lab result', error);
+      
     }
   });
 });
