@@ -5,6 +5,18 @@ import { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
 import { useTheme } from '../context/ThemeContext';
 
+
+const servicesList = [
+  { _id: '1', name: 'General Consultation' },
+  { _id: '2', name: 'Blood Test' },
+  { _id: '3', name: 'Phiotherapy' },
+  { _id: '4', name: 'Dental Checkup' },
+  { _id: '5', name: 'Urinalysis' },
+  { _id: '6', name: 'CT Scan' },
+  { _id: '7', name: 'X-Ray' },
+  { _id: '4', name: 'Laboratory' }
+];
+
 const AddPatientForm = () => {
   const [formData, setFormData] = useState({
     patientID: '',
@@ -28,33 +40,33 @@ const AddPatientForm = () => {
   });
   
   const [isLoading, setLoading] = useState(false);
-  const [servicesList, setServicesList] = useState<ServiceType[]>([]);
+  // const [servicesList, setServicesList] = useState<ServiceType[]>([]);
   const router = useRouter();
   const { theme } = useTheme();
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  useEffect(() => {
-    // Fetch available services from the backend
-    const fetchServices = async () => {
-      const token = getTokenFromCookie();
+  // useEffect(() => {
+  //   // Fetch available services from the backend
+  //   const fetchServices = async () => {
+  //     const token = getTokenFromCookie();
     
-    if (!token) {
-      toast.error('Authorization token missing! Please log in again.');
-      router.push('/login');
-      return;
-    }
-      try {
-        const response = await axios.get(`${API_URL}/services`);
-        console.log('response', response);
-        setServicesList(response.data.data); // Assuming the API returns { services: [...] }
-      } catch (error) {
-        console.error('Error fetching services:', error);
-        toast.error('Failed to load services.');
-      }
-    };
+  //   if (!token) {
+  //     toast.error('Authorization token missing! Please log in again.');
+  //     router.push('/login');
+  //     return;
+  //   }
+  //     try {
+  //       const response = await axios.get(`${API_URL}/services`);
+  //       console.log('response', response);
+  //       setServicesList(response.data.data); // Assuming the API returns { services: [...] }
+  //     } catch (error) {
+  //       console.error('Error fetching services:', error);
+  //       toast.error('Failed to load services.');
+  //     }
+  //   };
     
-    fetchServices();
-  }, [API_URL]);
+  //   fetchServices();
+  // }, [API_URL]);
 
 
   const handleChange = (e) => {
