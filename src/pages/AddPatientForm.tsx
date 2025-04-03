@@ -9,12 +9,12 @@ import { useTheme } from '../context/ThemeContext';
 const servicesList = [
   { _id: '1', name: 'General Consultation' },
   { _id: '2', name: 'Blood Test' },
-  { _id: '3', name: 'Phiotherapy' },
+  { _id: '3', name: 'Physiotherapy' },
   { _id: '4', name: 'Dental Checkup' },
   { _id: '5', name: 'Urinalysis' },
   { _id: '6', name: 'CT Scan' },
   { _id: '7', name: 'X-Ray' },
-  { _id: '4', name: 'Laboratory' }
+  { _id: '8', name: 'Laboratory' }
 ];
 
 const AddPatientForm = () => {
@@ -194,11 +194,12 @@ const AddPatientForm = () => {
 
       <div className="mb-4">
         <label className={`block font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Services Rendered:</label>
+        {console.log('formdata.services', formData.services)}
         {formData.services.map((service, index) => (
           <div key={index} className="flex items-center gap-4 mb-2">
             <select
-              value={service.serviceId || ''}
-              onChange={(e) => handleServiceChange(index, 'serviceId', e.target.value)}
+              value={service.serviceName || ''}
+              onChange={(e) => handleServiceChange(index, 'serviceName', e.target.value)}
               className={`p-2 border border-gray-300 rounded-md ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
             >
               <option value="">Select Service</option>
@@ -206,7 +207,7 @@ const AddPatientForm = () => {
                     <option>Loading services...</option>
                   ) : (
                     servicesList.map((service) => (
-                      <option key={service._id} value={service._id}>
+                      <option key={service._id} value={service.name}>
                         {service.name}
                       </option>
                     ))
@@ -241,7 +242,7 @@ const AddPatientForm = () => {
         ))}
         <button
           type="button"
-          onClick={() => setFormData({ ...formData, services: [...formData.services, { serviceId: '', price: '', description: '' }] })}
+          onClick={() => setFormData({ ...formData, services: [...formData.services, { serviceName: '', price: '', description: '' }] })}
           className="bg-green-500 text-white p-2 rounded-md"
         >
           Add Service
